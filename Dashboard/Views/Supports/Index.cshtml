@@ -1,0 +1,63 @@
+﻿@using Core.Entities
+@using Core.Enums
+@model IPagedList<Ticket>
+
+@{
+    ViewData["Title"] = "Tickets List";
+}
+
+
+
+
+<div class="row">
+    <div class="col-12">
+        @if (TempData["SuccessMessage"] != null && TempData["SuccessMessage"].ToString() != "")
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                @Html.Raw(@TempData["SuccessMessage"])
+            </div>
+        }
+
+        <div class="card">
+ 
+            <div class="card-body table-responsive p-0">
+                <table class="table table-head-fixed text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>Ticket Title</th>
+                            <th>Creation Date</th>
+                            <th>Student Name</th>
+                            <th>Status</th>
+                            <th>Action</th> <!-- Column for the button -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ticket in Model)
+                        {
+                            <tr>
+                                <td>@ticket.TicketTitle</td>
+                                <td>@ticket.CreatedAt?.ToString("yyyy-MM-dd")</td>
+                                <td>@ticket.Owner.Student.StudentNameE</td>
+                                <td>@(Enum.GetName(typeof(TicketStatus), ticket.TicketStatus))</td>
+                                <td>
+                                    <!-- View button linking to the Details page -->
+                                    <a href="@Url.Action("Edit", "Supports", new { id = ticket.TicketId })" class="btn btn-info">View</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { page = page }),
+                         new PagedListRenderOptions
+                {
+                    LiElementClasses = new string[] { "page-item" },
+                    PageClasses = new string[] { "page-link" },
+                    UlElementClasses = new string[] { "pagination", "float-right" }
+                })
+            </div>
+        </div>
+    </div>
+</div>

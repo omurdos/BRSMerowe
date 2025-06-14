@@ -1,0 +1,101 @@
+﻿@model CreateIndividualPushNotificationViewModel
+
+<div class="row">
+    <div class="col-12">
+
+        <form asp-controller="PushNotifications" asp-action="Individual" method="post">
+
+
+            <div class="card">
+                <div class="card-body">
+                    <label>Search Student</label>
+                    <div class="row">
+                        <div class="col-11">
+                            <input id="searchInput" type="text" class="form-control" placeholder="Search for a student (Student Number, Phone or email)..." aria-label="Search">
+
+                        </div>
+                        <div class="col-1">
+                            <button class="btn btn-primary" id="searchButton" type="button">
+                                <i class="fas fa-search"></i> <!-- Font Awesome Search Icon -->
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                     <label>Student Details</label>
+                    <div class="form-group">
+                                             <label>Name</label>
+
+                        <input id="Name" type="text" class="form-control" disabled>
+                    </div>
+                     <div class="form-group">
+                                              <label>Faculty</label>
+
+                     <input id="Faculty" type="text" class="form-control"  disabled>
+                    </div>
+                     <div class="form-group">
+                                              <label>Department</label>
+
+                      <input id="Department" type="text" class="form-control" disabled>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label asp-for="Title">Title</label>
+                        <input type="text" class="form-control" asp-for="Title">
+                        <span class="text-danger" asp-validation-for="Title"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Message">Message</label>
+                        <input type="text" class="form-control" asp-for="Message">
+                        <span class="text-danger" asp-validation-for="Message"></span>
+                    </div>
+                     <div class="form-group">
+                        <input hidden type="text" class="form-control" asp-for="StudentIdentifier">
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button id="submitBtn" type="submit" class="btn btn-primary  float-right  ml-1" disabled="true">Submit</button>
+                    <a class="btn btn-danger  float-right" asp-controller="PushNotifications" asp-action="Index">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+
+    @section Script {
+
+
+        <script>
+    $(document).ready(function() {
+        $('#searchButton').click(function() {
+            $('#submitBtn').prop('disabled', true);
+            var query = $('#searchInput').val();
+            $.ajax({
+                url: '/api/students/search',
+                type: 'GET',
+                data: { studentIdentifier : query },
+                success: function(response) {
+                    console.log(response);
+                     $('#Name').val(response.student.studentNameE);
+                     $('#Faculty').val(response.student.department.faculty.facultyNameE);
+                     $('#Department').val(response.student.department.departmentNameE);
+                     if(response.fcmToken != "" && response.fcmToken != null){
+                         $('#submitBtn').prop('disabled', false);
+                        $('#StudentIdentifier').val(query);
+                     }
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                }
+            });
+        });
+    });
+</script>
+
+
+    }
+</div>

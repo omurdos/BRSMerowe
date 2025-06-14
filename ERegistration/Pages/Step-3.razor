@@ -1,0 +1,285 @@
+﻿@page "/step-3/{FormNo}"
+@using DashBoard.Helpers;
+@using Microsoft.AspNetCore.Hosting
+@using Microsoft.AspNetCore.Identity;
+@using Microsoft.Extensions.Logging
+@using global::Shared.Services;
+@using static System.Net.Mime.MediaTypeNames;
+@using System.Timers
+
+@inject IDbContextFactory<TSTDBContext> DbFactory
+@inject IMapper mapper
+@inject NavigationManager NavManager
+@inject IWebHostEnvironment Environment
+@inject IFileUploader fileUploader
+@inject IJSRuntime JsRuntime
+@inject SMSService SMSService
+@inject OTPGenerator OTPGenerator
+
+
+
+<UniversityHeader></UniversityHeader>
+<h2 class="text-center">الصورة الشخصية ورقم الهاتف</h2>
+<div class="mb-5"></div>
+@if (isLoading)
+{
+    <Loading />
+}
+else
+{
+
+    <div class="row">
+        <div class="col"></div>
+        <div class="col-6">
+
+            <EditForm Model="@StudentIdentity" OnValidSubmit="@HandleValidSubmit">
+                <DataAnnotationsValidator />
+
+                @if (data != null)
+                {
+                    <div class="text-center">
+                        <img src="data:image/png;base64,@data" class="img-thumbnail" alt="Cinque Terre" style="height: 300px; width:300px;" />
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label for="PersonalPhoto">الصورة الشخصية</label>
+                    <InputFile OnChange="@LoadFiles" class="form-control" />
+                    <div class="form-text">الرجاء إختيار صورة رسمية مع خلفية بيضاء سيتم إستخدام الصورة لاستخراج البطاقة الجامعية</div>
+                    <ValidationMessage For="() => StudentIdentity.PersonalPhoto" />
+                </div>
+                <label for="phoneNumber">رقم الهاتف</label>
+                <div class="input-group mb-3" dir="ltr">
+                    <span class="input-group-text" id="basic-addon1">+249</span>
+                    <InputText id="phoneNumber" @bind-Value="StudentIdentity.PhoneNumber" class="form-control" /><br>
+                </div>
+                <div id="emailHelp" class="form-text mb-3">الرجاء إدخال رقم هاتف يعمل سيتم التحقق من رقم الهاتف لاكمال عملية التسجيل</div>
+
+                <ValidationMessage For="() => StudentIdentity.PhoneNumber" />
+
+                <div class="input-group mb-3">
+                    <InputCheckbox id="AcceptRegulations" @bind-Value="StudentIdentity.AcceptRegulations" />  <a href="/assets/students-behavior.pdf">أوافق على اللوائح والنظم</a>
+                    <br>
+
+                </div>
+                <ValidationMessage For="() => StudentIdentity.AcceptRegulations" />
+
+                <div class="row">
+                    <div class="col">
+                        <button type="button" @onclick="GoBack" class="btn btn-secondary float-end">السابق</button>
+
+                    </div>
+                    <div class="col">
+                        <button type="submit" class="btn btn-primary float-start">التحقق من رقم الهاتف</button>
+                    </div>
+                </div>
+
+                <div class="mb-0"></div>
+            </EditForm>
+
+
+            @if (displayVerificationForm)
+            {
+
+                <h4 class="text-center">التحقق من رقم الهاتف</h4>
+                @if (otpResendCount==3)
+                {
+                    <p class="text-center">فشلت 3 محاولات لارسال رسالة التحقق الرجاء مراجعة مكتب تكنولوجيا المعلومات</p>
+
+                }
+                <p class="text-center">تم إرسال رسالة نصية الى الرقم @StudentIdentity.PhoneNumber الرجاء ادخال رقم التحقق في الاسفل</p>
+                <p class="text-center">سيتم إعادة ارسال رمز التحقق  خلال خمس دقائق عند الساعة @ResendTime</p>
+                <EditForm Model="verifyPhone" OnValidSubmit="VerifyPhoneNumber">
+                    <div class="row">
+                        <div class="col"></div>
+                        <div class="mb-3 col-3 text-center">
+                            <label for="Number">رمز التحقق</label>
+                            <InputText id="Number" @bind-Value="verifyPhone.Code" class="form-control text-center" />
+                            <ValidationMessage For="() => verifyPhone.Code" />
+                            @if (incorrectCodeMessge != null)
+                            {
+                                <p class="text-danger">@incorrectCodeMessge</p>
+                            }
+                        </div>
+                        <div class="col"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col"></div>
+                        <div class="col-3">
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn d-block btn-primary ">التحقق</button>
+                                <button type="button" class="btn d-block btn-secondary " @onclick="ChangePhone">تغيير رقم الهاتف</button>
+                            </div>
+                        </div>
+                        <div class="col"></div>
+                    </div>
+                </EditForm>
+
+            }
+
+
+        </div>
+        <div class="col"></div>
+    </div>
+
+
+}
+
+@code {
+    private EditContext EC { get; set; }
+    private StudentIdentity StudentIdentity = new();
+    [Parameter]
+    public string FormNo { get; set; }
+    private Student Student;
+    private VerifyPhone verifyPhone = new();
+    private bool isLoading = false;
+    TSTDBContext context;
+    private bool displayVerificationForm = false;
+    private string ResendTime;
+    private List<IBrowserFile> loadedFiles = new();
+    private long maxFileSize = 1024 * 15;
+    private int maxAllowedFiles = 3;
+    IBrowserFile browserFile;
+    string data;
+    int otpResendCount = 0;
+    string incorrectCodeMessge;
+    private System.Threading.Timer timer; // NOTE: THIS LINE OF CODE ADDED
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        data = await fileUploader.ToBase64(e.File);
+        StudentIdentity.PersonalPhoto = e.File;
+        StateHasChanged();
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        context = DbFactory.CreateDbContext();
+        isLoading = true;
+        Student = await context.Students.Include(s => s.Guardian)
+        .FirstOrDefaultAsync(s => s.AddmissionFormNo == FormNo);
+        if (Student.IsERegistrationComplete)
+        {
+            NavManager.NavigateTo("/");
+        }
+        isLoading = false;
+        base.OnInitialized();
+    }
+
+    private async void HandleValidSubmit()
+    {
+
+        otpResendCount = 0;
+
+        var std = await context.Students.FirstOrDefaultAsync(s => s.Phone == StudentIdentity.PhoneNumber);
+
+        if (std == null || std.AddmissionFormNo == FormNo)
+        {
+            bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", $"سيتم إرسال رسالة الى الرقم {StudentIdentity.PhoneNumber}");
+            if (confirmed)
+            {
+                displayVerificationForm = true;
+                var code = OTPGenerator.GenerateRandomOTP(6);
+                await context.OTPCodes.AddAsync(new OTPCode { PhoneNumber = StudentIdentity.PhoneNumber, Code = code, CreatedAt = DateTime.Now });
+                await context.SaveChangesAsync();
+                await SMSService.SendSMS(StudentIdentity.PhoneNumber, code, "WEB");
+                ResendTime = DateTime.Now.AddMinutes(5).ToShortTimeString();
+                otpResendCount = otpResendCount++;
+                StateHasChanged();
+                timer = new System.Threading.Timer(async (object stateInfo) =>
+            {
+                if (otpResendCount == 3)
+                {
+                    timer.Dispose();
+                    return;
+                }
+                else
+                {
+
+                    code = OTPGenerator.GenerateRandomOTP(6);
+                    await context.OTPCodes.AddAsync(new OTPCode { PhoneNumber = StudentIdentity.PhoneNumber, Code = code, CreatedAt = DateTime.Now });
+                    await context.SaveChangesAsync();
+                    await SMSService.SendSMS(StudentIdentity.PhoneNumber, code, "WEB");
+                    ResendTime = DateTime.Now.AddMinutes(5).ToShortTimeString();
+                    otpResendCount = otpResendCount++;
+                    await InvokeAsync(StateHasChanged);
+                }
+            }, new System.Threading.AutoResetEvent(false), 300000, 300000);
+            }
+
+        }
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "رقم الهاتف الذي ادخلته موجود بالفعل في النظام الرجاء استخدام رقم هاتف آخر"); // Alert
+
+
+        }
+
+
+
+
+    }
+
+    private async Task VerifyPhoneNumber()
+    {
+
+        //var UploadResult = await fileUploader.UploadImage(StudentIdentity.PersonalPhoto, "PersonalPhoto");
+        //return;
+        incorrectCodeMessge = null;
+        var otp = await context.OTPCodes
+        .Where(o => o.PhoneNumber == StudentIdentity.PhoneNumber)
+        .OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync();
+        var minutes = DateTime.Now.Subtract(otp.CreatedAt).TotalMinutes;
+        if (minutes < 5 && otp.Code == verifyPhone.Code)
+        {
+
+            StateHasChanged();
+            if (StudentIdentity.PersonalPhoto != null)
+            {
+                var UploadResult = await fileUploader.UploadImage(StudentIdentity.PersonalPhoto, "Profile");
+                if (UploadResult.Succeed)
+                {
+                    Student.PersonalPhoto = UploadResult.FileName;
+
+                }
+            }
+            Student.IsERegistrationComplete = true;
+            Student.Phone = StudentIdentity.PhoneNumber;
+            context.Students.Update(Student);
+
+            var result = await context.SaveChangesAsync();
+            if (result > 0)
+            {
+                string message = "تم إكمال بياناتك بنجاح الرجاء التوجه لاكمال اجراءات الفحص الطبي";
+                await SMSService.SendSMS(Student.Phone, message, "WEB");
+                NavManager.NavigateTo($"/medical/{FormNo}");
+
+            }
+            timer.Dispose();
+        }
+        else
+        {
+            incorrectCodeMessge = "الرمز المدخل غير صحيح";
+        }
+    }
+
+    private void GoBack()
+    {
+        NavManager.NavigateTo($"/step-2/{FormNo}");
+    }
+
+    private void ChangePhone()
+    {
+        displayVerificationForm = false;
+        if (timer != null)
+        {
+            timer.Dispose();
+
+        }
+    }
+
+
+
+
+}

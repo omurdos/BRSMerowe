@@ -1,0 +1,86 @@
+﻿@model CreatePushNotificationViewModel
+
+<div class="row">
+    <div class="col-12">
+
+    <form asp-controller="PushNotifications" asp-action="Create" method="post">
+
+
+            <div class="card">
+                <div class="card-body">
+                   <div class="row">
+                       <div class="col-6">
+                            <div class="form-group">
+                                <label for="category">Select Faculty</label>
+                                <select id="facultyDropdown" asp-for="SelectedFacultyNumber" class="form-control" asp-items="@(new SelectList(Model.Faculties, "FacultyNumber", "FacultyNameE"))">
+                                    <option value="">-- Select a Faculty --</option>
+                                </select>
+                            </div>
+                       </div>
+                       <div class="col-6">
+                            <div class="form-group">
+                                <label>Departments</label>
+                                <select id="departmentDropdown" asp-for="SelectedDepartmentNumber" class="form-control">
+                                    <option value="">-- Select a Department --</option>
+                                </select>
+                            </div>
+                       </div>
+                   </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="form-group">
+                        <label asp-for="Title">Title</label>
+                        <input type="text" class="form-control" asp-for="Title">
+                        <span class="text-danger" asp-validation-for="Title"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Message">Message</label>
+                        <input type="text" class="form-control" asp-for="Message">
+                        <span class="text-danger" asp-validation-for="Message"></span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary  float-right  ml-1">Submit</button>
+                    <a class="btn btn-danger  float-right" asp-controller="PushNotifications" asp-action="Index">Cancel</a>
+                </div>
+            </div>
+    </form>
+    </div>
+
+
+    @section Script {
+
+
+        <script>
+            $(document).ready(function () {
+                $("#facultyDropdown").change(function () {
+                    var facultyNumber = $(this).val();
+
+                    $.ajax({
+                        type: "GET",
+                        url: "/api/faculties/departments",
+                        data: { facultyNumber: facultyNumber },
+                        success: function (data) {
+
+                            var productDropdown = $("#departmentDropdown");
+                            productDropdown.empty(); // Clear existing options
+                            productDropdown.append('<option value="">-- Select a Department --</option>');
+
+                            $.each(data, function (index, value) {
+
+                                console.log(value.departmentNumber);
+                                console.log(value.departmentNameE);
+
+                                productDropdown.append('<option value="' + value.departmentNumber + '">' + value.departmentNameE + '</option>');
+                            });
+                        }
+                    });
+                });
+            });
+        </script>
+    
+    }
+</div>

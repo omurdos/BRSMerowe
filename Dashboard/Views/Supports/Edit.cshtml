@@ -1,0 +1,65 @@
+@using Core.Entities
+@model Ticket
+
+@{
+    ViewData["Title"] = "Ticket Details";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+
+    <form asp-action="Edit" method="post">
+       <input asp-for="TicketId" hidden />
+
+
+        <div class="mb-3">
+            <label for="TicketTitle" class="form-label">Ticket Title</label>
+            <input type="text" class="form-control" id="TicketTitle" value="@Model.TicketTitle" disabled />
+        </div>
+
+        <div class="mb-3">
+            <label for="TicketDescription" class="form-label">Ticket Description</label>
+            <input type="text" class="form-control" id="TicketDescription" value="@Model.TicketDescription" disabled />
+        </div>
+
+        <div class="mb-3">
+            <label for="TicketStatus" class="form-label">Ticket Status</label>
+            <input type="text" class="form-control" id="TicketStatus" value="@Model.TicketStatus.ToString()" disabled />
+        </div>
+
+        <div class="mb-3">
+            <label for="APIUserId" class="form-label">API User ID</label>
+            <input type="text" class="form-control" id="APIUserId" value="@Model.APIUserId" disabled />
+        </div>
+
+        <div class="mb-3">
+            <label for="Owner" class="form-label">Owner</label>
+            <input type="text" class="form-control" id="Owner" value="@Model.Owner.Student.StudentNameE" disabled />
+        </div>
+
+        <div class="mb-3">
+            <label for="ResolvedOn" class="form-label">Resolved On</label>
+            <input type="text" class="form-control" id="ResolvedOn" value="@Model.ResolvedOn?.ToString("yyyy-MM-dd HH:mm:ss")" disabled />
+        </div>
+
+        <div class="mb-3">
+            <label for="ClosedOn" class="form-label">Closed On</label>
+            <input type="text" class="form-control" id="ClosedOn" value="@Model.ClosedOn?.ToString("yyyy-MM-dd HH:mm:ss")" disabled />
+        </div>
+
+        <div class="mb-3">
+            <label for="ResolvedBy" class="form-label">Resolved By</label>
+            <input type="text" class="form-control" id="ResolvedBy" value="@Model.ResolvedBy" disabled />
+        </div>
+
+        <div class="mb-3">
+            <label for="TicketResolution" class="form-label">Ticket Resolution</label>
+            <textarea class="form-control" asp-for="TicketResolution" rows="4">@Model.TicketResolution</textarea>
+        </div>
+
+        <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary">Save Resolution</button>
+        </div>
+    </form>
+</div>
+

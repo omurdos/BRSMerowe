@@ -1,0 +1,35 @@
+@using Core.Entities
+@model Role
+
+@{
+    ViewData["Title"] = "Edit Role";
+    var Claims = ViewBag.Claims as List<SystemClaimViewModel>;
+
+}
+
+<h1>Edit Role</h1>
+
+<form asp-action="Edit">
+    <input type="hidden" asp-for="Id" />
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="form-group"></div>
+    @for (int i = 0; i < Claims.Count; i++)
+    {
+        <div class="form-check">
+            <input asp-for="@Claims[i].IsSelected" class="form-check-input" />
+            <input type="hidden" asp-for="@Claims[i].Id" />
+            <input type="hidden" asp-for="@Claims[i].ClaimType" />
+            <input type="hidden" asp-for="@Claims[i].ClaimValue" />
+            <label class="form-check-label" for="@Claims[i].IsSelected">
+                @Claims[i].ClaimValue
+            </label>
+        </div>
+    }
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

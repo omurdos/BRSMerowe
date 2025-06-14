@@ -1,0 +1,64 @@
+@using Core.Entities;
+@model IPagedList<ServiceViewModel>
+
+
+<div class="row">
+    <div class="col-12">
+        @if (TempData["SuccessMessage"] != null && TempData["SuccessMessage"].ToString() != "")
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                @Html.Raw(@TempData["SuccessMessage"])
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-tools">
+                </div>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-head-fixed text-nowrap table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Services Name</th>
+                            <th>Services Fees</th>
+                            <th>Enabled</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (ServiceViewModel service in Model)
+                        {
+                            <tr >
+                                <td class="text-start">@service.Name</td>
+                                <td class="text-center">@service.Fee.ToString("N2")</td>
+                                <td class="text-center">
+                                        @(service.IsActive ? Html.Raw("<i class='fas fa-check-circle text-success'></i>") : Html.Raw("<i class='fas fa-times-circle text-danger'></i>"))
+                                </td>
+
+
+                                <td class="text-center">
+                                    <a class="btn btn-primary" asp-controller="Services" asp-action="Edit" asp-route-id="@service.Id"  title="Edit Service">
+                                        <i class="fas fa-pen"></i>&nbsp;
+                                        Edit
+                                    </a>
+                                </td>
+
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { page = page }),
+                new PagedListRenderOptions
+                {
+                    LiElementClasses = new string[] { "page-item" },
+                    PageClasses = new string[] { "page-link" },
+                    UlElementClasses = new string[] { "pagination", "float-right" }
+                })
+            </div>
+        </div>
+    </div>
+</div>

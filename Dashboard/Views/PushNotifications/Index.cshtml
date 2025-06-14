@@ -1,0 +1,74 @@
+﻿@model IPagedList<PushNotificationViewModel>
+
+<div class="row">
+    <div class="col-12">
+        @if (TempData["SuccessMessage"] != null && TempData["SuccessMessage"].ToString() != "")
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                @Html.Raw(@TempData["SuccessMessage"])
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-tools">
+                    @*      <a asp-controller="PushNotifications" asp-action="Create" class="btn btn-block btn-primary"><i class="fa fa-plus"></i> New Notification</a> *@
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            New Notification
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a asp-controller="PushNotifications" asp-action="Create" class="dropdown-item">To
+                                    All</a></li>
+                            <li><a asp-controller="PushNotifications" asp-action="Individual" class="dropdown-item">To a
+                                    student</a></li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-head-fixed text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Message</th>
+                            <th>Sent At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (PushNotificationViewModel pushNotification in Model)
+                        {
+                            <tr>
+                                <td>@pushNotification.Title</td>
+                                <td>@(
+                                    pushNotification.Message.Length > 15 ? pushNotification.Message.Substring(0, 15) :
+                                    pushNotification.Message)
+                            <td>@pushNotification.CreatedAt</td>
+                                <td>
+                                      <!-- Delete Button with Confirmation -->
+                                    <form asp-action="Delete" asp-controller="Pushnotifications" method="post" onsubmit="return confirm('Are you sure you want to delete this notification?');">
+                                        <input type="hidden" name="id" value="@pushNotification.Id" />
+                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                                                }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { page = page }),
+                new PagedListRenderOptions
+                {
+                    LiElementClasses = new string[] { "page-item" },
+                    PageClasses = new string[] { "page-link" },
+                    UlElementClasses = new string[] { "pagination", "float-right" }
+                })
+            </div>
+        </div>
+    </div>
+</div>

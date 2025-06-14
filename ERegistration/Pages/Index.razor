@@ -1,0 +1,159 @@
+﻿@page "/"
+@inject NavigationManager NavManager
+@inject IDbContextFactory<TSTDBContext> DbFactory
+@using ERegistration.Pages
+
+<EditForm Model="@admissionForm" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+
+    <UniversityHeader></UniversityHeader>
+
+    @if (isLoading)
+    {
+        <Loading />
+    }
+    else
+    {
+        @if (student == null)
+        {
+            <div class="row">
+                <div class="col"></div>
+                <div class="col-3">
+                    <div class="mb-3 text-center">
+                        <label for="Number mb-4">رقم الإستمارة</label>
+                        <InputText id="Number" @bind-Value="admissionForm.Number" class="form-control" style="text-align:center" />
+                        <ValidationMessage For="() => admissionForm.Number" />
+                    </div>
+                    @if (IsERegistrationComplete)
+                    {
+                        NavManager.NavigateTo($"/medical/{admissionForm.Number}");
+                    }
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn d-block btn-primary ">إرسال</button>
+                    </div>
+
+
+                </div>
+                <div class="col"></div>
+            </div>
+        }
+        else 
+        {
+            <h1 class="text-center mb-5">بيانات الطالب</h1>
+            <div class="row mb-5" style="margin-left: auto; margin-right:auto;">
+                <div class="col"></div>
+                <div class="col-6 align-content-center">
+                    <div class="row text-center">
+                        <div class="col">
+                            <p>رقم الإستمارة</p>
+                        </div>
+                        <div class="col">
+                            <p>@student.AddmissionFormNo</p>
+
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col">
+                            <p>إسم الطالب</p>
+
+                        </div>
+                        <div class="col">
+                            <p>@student.StudentNameA</p>
+
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col">
+                            <p>الكلية</p>
+
+                        </div>
+                        <div class="col">
+                            <p>@student.Department.Faculty.FacultyNameA</p>
+
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col">
+                            <p>القسم</p>
+
+                        </div>
+                        <div class="col">
+                            <p>@student.Department.DepartmentNameA</p>
+
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col">
+                            <p>الرقم الوطني</p>
+
+                        </div>
+                        <div class="col">
+                            <p>@student.NationalNumber</p>
+                        </div>
+                    </div>
+                  
+                   
+                </div>
+                <div class="col"></div>
+            </div>
+            <div class="row">
+                <div class="col"></div>
+                <div class="col-6">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn d-block btn-success " @onclick="Step1">البدء في التسجيل</button>
+                        <a class="btn d-block btn-secondary" @onclick="Reset" >العودة</a>
+                    </div>
+                </div>
+                <div class="col"></div>
+            </div>
+
+        }
+    }
+</EditForm>
+
+@code {
+    private AdmissionForm admissionForm = new AdmissionForm();
+    private Student student;
+    private bool isLoading = true;
+    private TSTDBContext context;
+    private bool IsERegistrationComplete = false;
+    protected override Task OnInitializedAsync()
+    {
+        context = DbFactory.CreateDbContext();
+        isLoading = false;
+        return base.OnInitializedAsync();
+    }
+    private async Task HandleValidSubmit()
+    {
+        isLoading = true;
+        student = await context.Students
+        .Include(s => s.Department)
+        .ThenInclude(d => d.Faculty)
+        .Include(s => s.AdmissionType)
+        .FirstOrDefaultAsync(s => s.AddmissionFormNo == admissionForm.Number);
+        if (student.IsERegistrationComplete)
+        {
+            student = null;
+            IsERegistrationComplete = true;
+            
+        }
+        isLoading = false;
+    }
+
+    private void Step1()
+    {
+        @if (!student.IsERegistrationComplete)
+        {
+            NavManager.NavigateTo($"/Step-1/{admissionForm.Number}");
+        }
+        else
+        {
+            IsERegistrationComplete = true;
+        }
+    }
+    private void Reset()
+    {
+        student = null;
+    }
+
+}

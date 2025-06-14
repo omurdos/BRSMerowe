@@ -1,0 +1,67 @@
+@model IPagedList<CertificateRequestViewModel>
+
+@if(Model.Any()){
+    <div class="row">
+    <div class="col-12">
+        @if (TempData["SuccessMessage"] != null && TempData["SuccessMessage"].ToString() != "")
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                @Html.Raw( @TempData["SuccessMessage"])
+            </div>
+        }
+       
+        <div class="card">
+            <div class="card-body table-responsive p-0">
+                <table class="table table-head-fixed text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Student Number</th>
+                            <th>Service</th>
+                            <th>Status</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (CertificateRequestViewModel certificateRequest in Model)
+                        {
+                            <tr>
+                                <td>@certificateRequest.Student.StudentNameE</td>
+                                <td>@certificateRequest.Student.StudentNumber</td>
+                                <td>@certificateRequest.Service.Name</td>
+                                <td>@certificateRequest.Status.Name</td>
+                                <td>@certificateRequest.CreatedAt</td>
+                                <td>
+                                    <a class="btn btn-primary" asp-action="Edit" asp-asp-controller="TranscriptCertificates" asp-route-id="@certificateRequest.Id">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { page = page }),
+                new PagedListRenderOptions
+                {
+                LiElementClasses = new string[] { "page-item" },
+                PageClasses = new string[] { "page-link" },
+                UlElementClasses = new string[] { "pagination", "float-right" }
+                })
+            </div>
+        </div>
+    </div>
+</div>
+}else{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                No certificate requests found.
+            </div>
+        </div>
+    </div>
+}

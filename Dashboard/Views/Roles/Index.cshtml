@@ -1,0 +1,74 @@
+@using Core.Entities
+@model IPagedList<Role>
+
+@{
+    ViewData["Title"] = "Roles";
+}
+
+
+
+
+
+
+
+<h1>System roles List</h1>
+
+
+
+
+
+
+<div class="row">
+    <div class="col-12">
+        @if (TempData["SuccessMessage"] != null && TempData["SuccessMessage"].ToString() != "")
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                @Html.Raw(@TempData["SuccessMessage"])
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-header">
+                <div class="btn-group" role="group">
+                    <a class="btn btn-primary " asp-controller="roles" asp-action="Create">
+                        New System Role
+                    </a>
+
+                </div>
+            </div>
+
+            <div class="card-body table-responsive p-0">
+                <table class="table table-head-fixed text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var role in Model)
+                        {
+                            <tr>
+                                <td>@role.Name</td>
+                                <td>
+                                      <a asp-action="Edit" asp-route-id="@role.Id" class="btn btn-warning">Edit</a>
+
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { page = page }),
+                new PagedListRenderOptions
+                {
+                    LiElementClasses = new string[] { "page-item" },
+                    PageClasses = new string[] { "page-link" },
+                    UlElementClasses = new string[] { "pagination", "float-right" }
+                })
+            </div>
+        </div>
+    </div>
+</div>

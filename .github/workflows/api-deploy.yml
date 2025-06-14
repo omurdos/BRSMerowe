@@ -1,0 +1,39 @@
+name: Deploy Merowe APIs
+
+on:
+  push:
+    paths:
+      - 'API/**'
+    branches:
+      - main
+  workflow_dispatch: 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore API/API.csproj
+
+      - name: Build and Publish API
+        run: dotnet publish API/API.csproj -c Release -o ./publish
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to production server
+        run: |
+          scp -r ./publish/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/merowe_api
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo systemctl restart merowe_api.service"

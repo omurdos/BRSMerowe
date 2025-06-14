@@ -1,0 +1,181 @@
+@using Core.Entities
+@using Core.Enums
+@model EditCertificateRequestViewModel
+
+
+<div class="card">
+    <div class="card-header">
+        @if (!string.IsNullOrEmpty(Model.Payment.ReceiptPhoto) && Model.Status.Name == "Pending Verification")
+
+        {
+
+            <a class="btn btn-primary  float-right  ml-1" asp-action="Decision" asp-controller="CertificateRequests"
+                asp-route-decision="Approved" asp-route-id="@Model.Id">Approved</a>
+                <a class="btn btn-primary  float-right  ml-1" asp-action="Decision" asp-controller="CertificateRequests"
+                asp-route-decision="Rejected" asp-route-id="@Model.Id">Rejected</a>
+        }
+        @switch (Model.Status.Name)
+
+        {
+
+
+            case "Approved":
+                <a class="btn btn-primary  float-right  ml-1" asp-action="Decision" asp-controller="CertificateRequests"
+                    asp-route-decision="Printed" asp-route-id="@Model.Id">Printed</a>
+                break;
+
+            case "Rejected":
+                <span class="badge bg-danger">Rejected</span>
+                break;
+            case "Pending Payment":
+                <span class="badge bg-danger">Pending Payment</span>
+                break;
+            default:
+                <span class="badge bg-secondary">Unknown</span>
+                break;
+
+        }
+
+    </div>
+
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane"
+                type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Details</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane"
+                type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false"
+                disabled="@(string.IsNullOrEmpty(Model.Payment.ReceiptPhoto))">Reciept</button>
+        </li>
+
+    </ul>
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab"
+            tabindex="0">
+
+
+            <div class="row">
+                <div class="col-12">
+                    <form asp-controller="StudentsProfiles" asp-action="Edit" method="post"
+                        enctype="multipart/form-data">
+                        <input type="text" hidden asp-for="@Model.Id" />
+                        <div class="card">
+
+                            <div class="card-body">
+
+
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label asp-for="@Model.Student.StudentNameE">Student Name</label>
+                                            <input type="text" class="form-control"
+                                                asp-for="@Model.Student.StudentNameE" disabled>
+                                            <span class="text-danger"
+                                                asp-validation-for="@Model.Student.StudentNameE"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label asp-for="@Model.Student.StudentNumber">Student Number</label>
+                                            <input type="text" class="form-control"
+                                                asp-for="@Model.Student.StudentNumber" disabled>
+                                            <span class="text-danger"
+                                                asp-validation-for="@Model.Student.StudentNumber"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label asp-for="@Model.FullNameEN">Full Name EN</label>
+                                            <input type="text" class="form-control" asp-for="@Model.FullNameEN"
+                                                disabled>
+                                            <span class="text-danger" asp-validation-for="@Model.FullNameEN"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label asp-for="@Model.FullNameAR">Faculty Name AR</label>
+                                            <input type="text" class="form-control" asp-for="@Model.FullNameAR"
+                                                disabled>
+                                            <span class="text-danger" asp-validation-for="@Model.FullNameAR"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Language
+                                            </label>
+                                            <input value="@Model.Language.ToString()" class="form-control" type="text"
+                                                disabled>
+
+
+                                        </div>
+
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label asp-for="@Model.Status.Name">Status</label>
+                                            <input type="text" class="form-control" asp-for="@Model.Status.Name"
+                                                value="@Model.Status.Name" disabled>
+                                            <span class="text-danger" asp-validation-for="@Model.Status.Name"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            @* <div class="card-footer">
+                                    <button type="submit" class="btn btn-primary  float-right  ml-1">Submit</button>
+                                    <a class="btn btn-danger  float-right" asp-controller="PushNotifications"
+                                        asp-action="Index">Cancel</a>
+                                </div> *@
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+        <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+            <div class="row">
+                <img src="/attachments/receipt/@(Model.Payment.ReceiptPhoto)" />
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+@* 
+@section Script {
+
+
+    <script>
+        const fileInput = document.getElementById("fileInput");
+        const personalPhoto = document.getElementById("personalPhoto");
+        const resetButton = document.getElementById("resetButton");
+
+        // Store the initial image src
+        const initialSrc = personalPhoto.src;
+
+        fileInput.addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    personalPhoto.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        resetButton.addEventListener("click", function () {
+            personalPhoto.src = initialSrc;
+            fileInput.value = ""; // Clear the file input
+        });
+    </script>
+
+} *@

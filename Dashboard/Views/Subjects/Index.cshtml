@@ -1,0 +1,302 @@
+﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor;
+
+
+@using Core.Entities
+@model IPagedList<StudentSubjectViewModel>
+@{
+
+    var httpContext = HttpContextAccessor.HttpContext;
+
+
+    var faculties = ViewBag.faculties as List<Faculty>;
+    var departments = ViewBag.departments as List<Department>;
+    var batches = ViewBag.batches as List<Batch>;
+    var programs = ViewBag.programs as List<Program>;
+
+
+    var studentNumber = httpContext.Request.Query["studentNumber"].ToString();
+    var pageNumber = httpContext.Request.Query["page"].ToString();
+    var selectedFacultyNumber = httpContext.Request.Query["facultyNumber"].ToString();
+    var selectedDepartmentNumber = httpContext.Request.Query["departmentNumber"].ToString();
+    var selectedBatchId = int.TryParse(httpContext.Request.Query["batchId"].ToString(), out int batchId) ? batchId : 0;
+    var selectedProgramId = int.TryParse(httpContext.Request.Query["programId"].ToString(), out int programId) ? programId :
+    0;
+
+
+}
+
+<div class="row">
+    <div class="col-12">
+        @if (TempData["SuccessMessage"] != null && TempData["SuccessMessage"].ToString() != "")
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                @Html.Raw(@TempData["SuccessMessage"])
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-body">
+                <form method="get" asp-action="Index" asp-controller="Subjects">
+                    <div class="row">
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label for="category">Select Faculty</label>
+                                <select id="facultyDropdown" name="facultyNumber" class="form-control">
+                                    <option value="">-- Select a Faculty --</option>
+                                    @foreach (var faculty in faculties)
+                                    {
+                                        if (selectedFacultyNumber
+                                        == faculty.FacultyNumber)
+                                        {
+                                            <option value="@faculty.FacultyNumber" selected>@faculty.FacultyNameE</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@faculty.FacultyNumber">@faculty.FacultyNameE</option>
+
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label>Select Department</label>
+                                <select id="departmentDropdown" name="DepartmentNumber" class="form-control">
+                                    <option value="">-- Select a Department --</option>
+                                    @foreach (var department in departments)
+                                    {
+                                        if (selectedDepartmentNumber == department.DepartmentNumber)
+                                        {
+                                            <option value="@department.DepartmentNumber" selected>@department.DepartmentNameE
+                                            </option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@department.DepartmentNumber">@department.DepartmentNameE</option>
+
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label>Select Batch</label>
+                                <select id="batchDropdown" name="BatchId" class="form-control">
+                                    <option value="">-- Select a Batch --</option>
+                                    @foreach (var batch in batches)
+                                    {
+                                        if (selectedBatchId == batch.BatchId)
+                                        {
+                                            <option value="@batch.BatchId" selected>@batch.BatchDescription</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@batch.BatchId">@batch.BatchDescription</option>
+
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label>Select Program</label>
+                                <select id="programDropdown" name="ProgramId" class="form-control">
+                                    <option value="">-- Select a Program --</option>
+                                    @foreach (var program in programs)
+                                    {
+                                        if (selectedProgramId == program.ProgramId)
+                                        {
+                                            <option value="@program.ProgramId" selected>@program.ProgramNameE</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@program.ProgramId">@program.ProgramNameE</option>
+
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+
+                    </div>
+                    <div class="row">
+                        <div class="col-10">
+                            <input id="studentNumber" type="text" class="form-control" name="studentNumber"
+                                placeholder="Student Number..." value="@studentNumber" aria-label="Search">
+                        </div>
+                        <div class="col-1">
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary  float-right">Search</button>
+                            </div>
+                        </div>
+                        <div class="col-1">
+                            <div class="form-group">
+                                <a asp-action="Index" asp-controller="Subjects"
+                                    class="btn btn-danger  float-right">Reset</a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+
+            <div class="card-body table-responsive p-0">
+                <table class="table table-head-fixed text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>Name En</th>
+                            <th>View</th>
+                            <th>For student?</th>
+                            <th>Semester</th>
+                            <th>Grade</th>
+                            <th>Action</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (StudentSubjectViewModel studentSubject in Model)
+                        {
+                            <tr>
+                                <td>@studentSubject.SubjectCodeNavigation.SubjectNameE</td>
+
+                                <td>@(studentSubject.ViewYesNO == 1 ? "Yes" : "No")</td>
+                                <td>@(studentNumber == null || studentNumber == "" ? "No" : "Yes")</td>
+                                <td>@(studentSubject.Semester)</td>
+                                <td>@(studentSubject.SubjectGrade ?? "")</td>
+
+                                <td>
+                                    <a asp-action="Edit" asp-controller="Subjects"
+                                        asp-route-id="@studentSubject.SubjectCodeId"
+                                        asp-route-enabled="@( studentSubject.ViewYesNO == 0 ? 1 : 0 )"
+                                        asp-route-facultyNumber="@selectedFacultyNumber"
+                                        asp-route-departmentNumber="@selectedDepartmentNumber"
+                                        asp-route-batchId="@selectedBatchId" asp-route-programId="@selectedProgramId"
+                                         asp-route-studentnumber="@studentNumber"
+                                        asp-route-page="@pageNumber" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    @*   <a asp-action="" asp-controller="" asp-route-id="" class="btn btn-danger btn-sm">
+                                         <i class="fas fa-trash"></i>
+                                     </a> *@
+                                </td>
+
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                @Html.PagedListPager(Model, page => Url.Action("Index", new
+                {
+                    page = page,
+                                facultyNumber = httpContext.Request.Query["facultyNumber"],
+                                departmentNumber = httpContext.Request.Query["departmentNumber"],
+                                batchId = httpContext.Request.Query["batchId"],
+                                programId = httpContext.Request.Query["programId"],
+                                studentNumber = httpContext.Request.Query["studentNumber"]
+
+
+                                }),
+                                new PagedListRenderOptions
+                                {
+                                    LiElementClasses = new string[] { "page-item" },
+                                    PageClasses = new string[] { "page-link" },
+                                    UlElementClasses = new string[] { "pagination", "float-right" }
+                                })
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Script {
+
+
+    <script>
+        $(document).ready(function () {
+            $("#facultyDropdown").change(function () {
+                var facultyNumber = $(this).val();
+
+                $.ajax({
+                    type: "GET",
+                    url: "/api/faculties/departments",
+                    data: { facultyNumber: facultyNumber },
+                    success: function (data) {
+                        console.log(data);
+                        var productDropdown = $("#departmentDropdown");
+                        productDropdown.empty(); // Clear existing options
+                        productDropdown.append('<option value="">-- Select a Department --</option>');
+
+                        $.each(data.$values, function (index, value) {
+
+                            console.log(value.departmentNumber);
+                            console.log(value.departmentNameE);
+
+                            productDropdown.append('<option value="' + value.departmentNumber + '">' + value.departmentNameE + '</option>');
+                        });
+                    }
+                });
+            });
+        });
+
+        $("#departmentDropdown").change(function () {
+            var departmentNumber = $(this).val();
+            var facultyNumber = $("#facultyDropdown").val();
+
+            $.ajax({
+                type: "GET",
+                url: "/batches/getBatches",
+                data: { departmentNumber: departmentNumber, facultyNumber: facultyNumber },
+                success: function (data) {
+                    console.log(data);
+                    var batchDropdown = $("#batchDropdown");
+                    batchDropdown.empty(); // Clear existing options
+                    batchDropdown.append('<option value="">-- Select a Batch --</option>');
+
+                    $.each(data.$values, function (index, value) {
+
+
+
+                        batchDropdown.append('<option value="' + value.batchId + '">' + value.batchDescription + '</option>');
+                    });
+                }
+            });
+        });
+
+
+        $("#batchDropdown").change(function () {
+            var batchId = $(this).val();
+            var facultyNumber = $("#facultyDropdown").val();
+            var departmentNumber = $("#departmentDropdown").val();
+
+            $.ajax({
+                type: "GET",
+                url: "/programs/getPrograms",
+                data: { departmentNumber: departmentNumber, facultyNumber: facultyNumber, batchId: batchId },
+                success: function (data) {
+                    console.log(data);
+                    var programDropdown = $("#programDropdown");
+                    programDropdown.empty(); // Clear existing options
+                    programDropdown.append('<option value="">-- Select a Program --</option>');
+
+                    $.each(data.$values, function (index, value) {
+
+
+
+                        programDropdown.append('<option value="' + value.programId + '">' + value.programNameE + '</option>');
+                    });
+                }
+            });
+        });
+
+    </script>
+
+}

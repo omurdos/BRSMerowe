@@ -1,0 +1,31 @@
+@using Core.Entities
+@model SystemClaim
+
+@{
+    ViewData["Title"] = "Create Claim";
+}
+
+<h1>Create New Claim</h1>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label asp-for="ClaimType" class="control-label">Claim Type</label>
+        <input asp-for="ClaimType" class="form-control" />
+        <span asp-validation-for="ClaimType" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="ClaimValue" class="control-label">Claim Value</label>
+        <input asp-for="ClaimValue" class="form-control" />
+        <span asp-validation-for="ClaimValue" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Description" class="control-label">Description</label>
+        <input asp-for="Description" class="form-control" />
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+    <br />
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Create</button>
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</form>

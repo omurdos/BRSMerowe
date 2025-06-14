@@ -1,0 +1,62 @@
+﻿@using Core.Entities
+@model IPagedList<UserViewModel>
+
+<div class="row">
+    <div class="col-12">
+        @if (TempData["SuccessMessage"] != null && TempData["SuccessMessage"].ToString() != "")
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                @Html.Raw(@TempData["SuccessMessage"])
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-tools">
+                    @*      <a asp-controller="PushNotifications" asp-action="Create" class="btn btn-block btn-primary"><i class="fa fa-plus"></i> New Notification</a> *@
+                    <div class="btn-group" role="group">
+                        <a  class="btn btn-primary" asp-action="Create" asp-controller="users">
+                            New User
+                        </a>
+                      
+                    </div>
+                </div>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-head-fixed text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Roles</th>
+                            <th>Actions</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (UserViewModel userViewModel in Model)
+                        {
+                            <tr>
+                                <td>@userViewModel.UserName</td>
+                                <td>@userViewModel.Email</td>
+                                <td>@(userViewModel.RoleNames == null ? "" : string.Join("", userViewModel.RoleNames))</td>
+                                <td><a class="btn btn-primary" asp-controller="Users" asp-action="Edit" asp-route-id="@userViewModel.Id">Edit</a></td>
+
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { page = page }),
+                         new PagedListRenderOptions
+                {
+                    LiElementClasses = new string[] { "page-item" },
+                    PageClasses = new string[] { "page-link" },
+                    UlElementClasses = new string[] { "pagination", "float-right" }
+                })
+            </div>
+        </div>
+    </div>
+</div>

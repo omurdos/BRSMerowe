@@ -1,0 +1,247 @@
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Dashboard</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item active">Dashboard</li>
+    </ol>
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white mb-4">
+                <div class="card-body"> <b>@ViewBag.allStudentsCount</b> Students </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" asp-action="Index" asp-controller="StudentsProfiles">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-white mb-4">
+                <div class="card-body"> <b>@ViewBag.allStudentsWithNoPhotos</b> Didn't upload a photo </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" asp-action="Index" asp-controller="StudentsProfiles">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white mb-4">
+                <div class="card-body"> <b>@ViewBag.registeredStudentsCount</b> Students registered </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" asp-action="Index" asp-controller="StudentsProfiles">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-danger text-white mb-4">
+                <div class="card-body"> <b>@ViewBag.unregisteredStudentCount</b> Students Unregistered </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" asp-action="Index" asp-controller="StudentsProfiles">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie me-1"></i>
+                    Students Devices
+                </div>
+                <div class="card-body"><canvas id="myPieChart" width="100%" height="50"></canvas></div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar me-1"></i>
+                    Students Per Faculty
+                </div>
+                <div class="card-body"><canvas id="studentsPerfacultyChart" width="100%" height="40"></canvas></div>
+            </div>
+        </div>
+    </div>
+     <div class="row">
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie me-1"></i>
+                   Certificates Requests
+                </div>
+                <div class="card-body"><canvas id="myCertificatesRequestChart" width="100%" height="50"></canvas></div>
+            </div>
+        </div>
+       <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie me-1"></i>
+                    Enrollment Requests
+                </div>
+                <div class="card-body"><canvas id="enrollmentRequestsChart" width="100%" height="50"></canvas></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Script {
+
+
+
+
+    <script src="~/dist/js/site.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
+
+    @* studentsPerfacultyChart *@
+    <script>
+      
+
+
+        const labels = @Html.Raw(ViewBag.LabelsJson);
+
+
+        // Set new default font family and font color to mimic Bootstrap's default styling
+        Chart.defaults.global.defaultFontFamily = '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+        Chart.defaults.global.defaultFontColor = '#292b2c';
+
+        // Bar Chart Example
+        var ctx = document.getElementById("studentsPerfacultyChart");
+        var myLineChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Students",
+                    backgroundColor: "rgba(2,117,216,1)",
+                    borderColor: "rgba(2,117,216,1)",
+                    data: @Html.Raw(ViewBag.DataJson),
+                }],
+            },
+            options: {
+                scales: {
+                    xAxes: [{
+                        y: {
+                            beginAtZero: true
+                        }
+
+                    }],
+                },
+                legend: {
+                    display: false
+                }
+            }
+        });
+
+
+
+
+    </script>
+
+
+    <script>
+
+
+
+
+        // Set new default font family and font color to mimic Bootstrap's default styling
+        Chart.defaults.global.defaultFontFamily = '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+        Chart.defaults.global.defaultFontColor = '#292b2c';
+
+
+        var ctx = document.getElementById("myPieChart");
+
+        var devicesLables = @Html.Raw(ViewBag.devicesPerManufacturerLabels);
+        
+        
+        
+        var lablesColors = devicesLables.map(() => {
+            const r = Math.floor(Math.random() * 255);
+            const g = Math.floor(Math.random() * 255);
+            const b = Math.floor(Math.random() * 255);
+            return `rgba(${r}, ${g}, ${b}, 0.6)`;
+        });
+        // Pie Chart Example
+        var myPieChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: devicesLables,
+                datasets: [{
+                    data: @Html.Raw(ViewBag.devicesPerManufacturerValues),
+                    backgroundColor: lablesColors,
+
+                }],
+            },
+        });
+
+    </script>
+
+
+    <script>
+
+
+
+
+     
+
+
+        var Certificatesctx = document.getElementById("myCertificatesRequestChart");
+
+        var certificateLables = @Html.Raw(ViewBag.CertificateRequestLabelsJson);
+        
+        
+        
+        var certificatelablesColors = certificateLables.map(() => {
+            const r = Math.floor(Math.random() * 255);
+            const g = Math.floor(Math.random() * 255);
+            const b = Math.floor(Math.random() * 255);
+            return `rgba(${r}, ${g}, ${b}, 0.6)`;
+        });
+
+        // Pie Chart Example
+        var certificatePieChart = new Chart(Certificatesctx, {
+            type: 'pie',
+            data: {
+                labels: certificateLables,
+                datasets: [{
+                    data: @Html.Raw(ViewBag.CertificateRequestDataJson),
+                    backgroundColor: certificatelablesColors,
+
+                }],
+            },
+        });
+
+    </script>
+
+
+    <script>
+
+        var enrollmentctx = document.getElementById("enrollmentRequestsChart");
+
+        var enrollmentLables = @Html.Raw(ViewBag.EnrollmentRequestLabelsJson);
+        
+        
+        
+        var enrollmentlablesColors = enrollmentLables.map(() => {
+            const r = Math.floor(Math.random() * 255);
+            const g = Math.floor(Math.random() * 255);
+            const b = Math.floor(Math.random() * 255);
+            return `rgba(${r}, ${g}, ${b}, 0.6)`;
+        });
+
+        // Pie Chart Example
+        var certificatePieChart = new Chart(enrollmentctx, {
+            type: 'pie',
+            data: {
+                labels: enrollmentLables,
+                datasets: [{
+                    data: @Html.Raw(ViewBag.EnrollmentRequestDataJson),
+                    backgroundColor: enrollmentlablesColors,
+
+                }],
+            },
+        });
+
+    </script>
+
+
+}

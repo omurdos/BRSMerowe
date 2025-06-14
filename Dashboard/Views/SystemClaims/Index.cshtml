@@ -1,0 +1,81 @@
+@using Core.Entities
+
+@model IPagedList<SystemClaim>
+
+@{
+    ViewData["Title"] = "Claims List";
+}
+
+<h1>System Claims List</h1>
+
+
+
+
+
+
+<div class="row">
+    <div class="col-12">
+        @if (TempData["SuccessMessage"] != null && TempData["SuccessMessage"].ToString() != "")
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                @Html.Raw(@TempData["SuccessMessage"])
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-header">
+                <div class="btn-group" role="group">
+                    <a class="btn btn-primary " asp-controller="systemclaims" asp-action="Create">
+                        New System Claims
+                    </a>
+
+                </div>
+            </div>
+
+            <div class="card-body table-responsive p-0">
+                <table class="table table-head-fixed text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>Claim Type</th>
+                            <th>Claim Value</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var claim in Model)
+                            {
+                                <tr>
+                                    <td>@claim.ClaimType</td>
+                                    <td>@claim.ClaimValue</td>
+                                    <td>@claim.Description</td>
+                                    <td>
+                                        <a asp-action="Edit" asp-route-id="@claim.Id" class="btn btn-warning">Edit</a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center">No claims available.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { page = page }),
+                new PagedListRenderOptions
+                {
+                    LiElementClasses = new string[] { "page-item" },
+                    PageClasses = new string[] { "page-link" },
+                    UlElementClasses = new string[] { "pagination", "float-right" }
+                })
+            </div>
+        </div>
+    </div>
+</div>

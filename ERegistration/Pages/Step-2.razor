@@ -1,0 +1,116 @@
+﻿@page "/step-2/{FormNo}"
+
+@inject IDbContextFactory<TSTDBContext> DbFactory
+@inject IMapper mapper
+@inject NavigationManager NavManager
+
+<UniversityHeader></UniversityHeader>
+<h2 class="text-center">بيانات ولي الأمر</h2>
+<div class="mb-5"></div>
+@if (isLoading)
+{
+    <Loading />
+
+}
+else
+{
+    <div class="row">
+        <div class="col"></div>
+        <div class="col-6">
+            <EditForm Model="@gaurdianInfo" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label for="Name">الإسم</label>
+                    <InputText id="Name" @bind-Value="gaurdianInfo.Name" class="form-control" />
+                    <ValidationMessage For="() => gaurdianInfo.Name" />
+                </div>
+                <label for="phoneNumber">رقم الهاتف</label>
+                <div class="input-group mb-3" dir="ltr">
+                    <span class="input-group-text" id="basic-addon1">+249</span>
+                    <InputText id="phoneNumber" @bind-Value="gaurdianInfo.PhoneNumber" class="form-control" />
+                </div>
+                <ValidationMessage For="() => gaurdianInfo.PhoneNumber" />
+
+                <div class="mb-3">
+                    <label for="relationship">صلة القرابة</label>
+                    <InputText id="relationship" @bind-Value="gaurdianInfo.Relashionship" class="form-control" />
+                    <ValidationMessage For="() => gaurdianInfo.Relashionship" />
+                </div>
+                <div class="mb-3">
+                    <label for="address">العنوان</label>
+                    <InputText id="address" @bind-Value="gaurdianInfo.Address" class="form-control" />
+                    <ValidationMessage For="() => gaurdianInfo.Address" />
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <button type="button" @onclick="GoBack" class="btn btn-secondary float-end">السابق</button>
+
+                    </div>
+                    <div class="col">
+                        <button type="submit" class="btn btn-primary float-start">التالي</button>
+                    </div>
+                </div>
+
+            </EditForm>
+        </div>
+        <div class="col"></div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string FormNo { get; set; }
+    private GuardianInfo gaurdianInfo = new GuardianInfo();
+    private Student Student;
+    private bool isLoading = false;
+    TSTDBContext context;
+
+    protected override async Task OnInitializedAsync()
+    {
+        context = DbFactory.CreateDbContext();
+        isLoading = true;
+
+        Student = await context.Students.Include(s => s.Guardian)
+        .FirstOrDefaultAsync(s => s.AddmissionFormNo == FormNo);
+        if (Student.IsERegistrationComplete)
+        {
+            NavManager.NavigateTo("/");
+        }
+        mapper.Map(Student.Guardian, gaurdianInfo);
+        isLoading = false;
+    }
+
+    private async void HandleValidSubmit()
+    {
+        isLoading = true;
+        Guardian guardian = await context.Guardians
+        .FirstOrDefaultAsync(g => g.StudentNumber == Student.StudentNumber);
+
+        if (guardian == null)
+        {
+            guardian = mapper.Map<Guardian>(gaurdianInfo);
+            guardian.StudentNumber = Student.StudentNumber;
+            context.Guardians.Add(guardian);
+        }
+        else
+        {
+            mapper.Map(gaurdianInfo, guardian);
+            context.Guardians.Update(guardian);
+
+        }
+
+        var result = await context.SaveChangesAsync();
+        if (result > 0)
+        {
+            Console.WriteLine(result);
+            NavManager.NavigateTo($"/step-3/{FormNo}");
+        }
+    }
+    private async void GoBack()
+    {
+        NavManager.NavigateTo($"/step-1/{FormNo}");
+    }
+
+}

@@ -1,0 +1,176 @@
+﻿@page "/step-1/{FormNo}"
+
+@inject IDbContextFactory<TSTDBContext> DbFactory
+@inject IMapper mapper
+@inject NavigationManager NavManager
+
+
+
+<UniversityHeader></UniversityHeader>
+<h2 class="text-center">بيانات الطالب</h2>
+<div class="mb-5"></div>
+@if (isLoading)
+{
+    <Loading />
+}
+else
+{
+
+    <div class="row">
+        <div class="col"></div>
+        <div class="col-6">
+            <EditForm Model="@basicInfo" OnValidSubmit="@HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <div class="mb-3">
+                    <label for="Gender" class="form-label">الجنس</label>
+                    <select class="form-select" @bind="basicInfo.Gender" id="Gender" aria-label="Default select">
+                        <option selected>إختيار الجنس</option>
+                        <option value="Male">ذكر</option>
+                        <option value="Female">أنثى</option>
+
+                    </select>
+                    <ValidationMessage For="() => basicInfo.Gender" />
+                </div>
+                <div class="mb-3">
+                    <label for="email">البريد الإلكتروني</label>
+                    <InputText id="email" @bind-Value="basicInfo.Email" class="form-control" />
+                    <ValidationMessage For="() => basicInfo.Email" />
+                </div>
+                <div class="mb-3">
+                    <label for="birthdate">تاريخ الميلاد</label>
+                    <InputDate id="address" @bind-Value="basicInfo.Birthdate" class="form-control" />
+                    <ValidationMessage For="() => basicInfo.Birthdate" />
+                </div>
+                <div class="mb-3">
+                    <label for="Country" class="form-label">الدولة</label>
+                    <select class="form-select" @onchange="UpdateCountryStates" id="Country" aria-label="Default select">
+                        <option selected>إختيار الدولة</option>
+                        @foreach (var country in countries)
+                        {
+                            if (country.Id == basicInfo.CountryId)
+                            {
+                                <option value="@country.Id" selected>@country.NameAr</option>
+                            }
+                            else
+                            {
+                                <option value="@country.Id">@country.NameAr</option>
+
+                            }
+
+                        }
+                    </select>
+                    <ValidationMessage For="() => basicInfo.CountryId" />
+
+                </div>
+                @if (states.Count > 0)
+                {
+                    <div class="mb-3">
+                        <label for="State" class="form-label">الولاية</label>
+                        <select @bind="basicInfo.StateId" class="form-select" id="State" aria-label="Default select">
+                            <option selected>إختيار الولاية</option>
+                            @foreach (var state in states)
+                            {
+                                <option value="@state.Id">@state.NameAr</option>
+                            }
+                        </select>
+                    </div>
+                }
+                <div class="mb-3">
+                    <label for="address">العنوان</label>
+                    <InputText id="address" @bind-Value="basicInfo.Address" class="form-control" />
+                    <ValidationMessage For="() => basicInfo.Address" />
+                </div>
+                <div class="mb-3">
+                    <label for="State" class="form-label">الديانه</label>
+                    <select @bind="basicInfo.ReligionId" class="form-select" id="State" aria-label="Default select">
+                        <option selected> إختيار الديانة</option>
+                        @foreach (var religion in religions)
+                        {
+                            <option value="@religion.Id">@religion.Name</option>
+                        }
+                    </select>
+                    <ValidationMessage For="() => basicInfo.ReligionId" />
+
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <button type="button" @onclick="GoBack" class="btn btn-secondary float-end">السابق</button>
+
+                    </div>
+                    <div class="col">
+                        <button type="submit" class="btn btn-primary float-start">التالي</button>
+                    </div>
+                </div>
+
+
+            </EditForm>
+
+        </div>
+        <div class="col"></div>
+    </div>
+    <div class="mb-5"></div>
+}
+
+
+
+
+@code {
+    [Parameter]
+    public string FormNo { get; set; }
+    private BasicInfo basicInfo = new();
+    private Student Student;
+    private List<Religion> religions;
+    private List<Country> countries;
+    private List<State> states = new List<State>();
+    private bool isLoading = false;
+    TSTDBContext context;
+
+    protected override async Task OnInitializedAsync()
+    {
+        context = DbFactory.CreateDbContext();
+        isLoading = true;
+
+        Student = await context.Students.Include(s => s.Country).Include(s => s.State).FirstOrDefaultAsync(s => s.AddmissionFormNo == FormNo);
+        if (Student.IsERegistrationComplete)
+        {
+            NavManager.NavigateTo("/");
+        }
+        religions = await context.Religions.OrderBy(r => r.Name).ToListAsync();
+        countries = await context.Countries.OrderBy(c => c.NameAr).ToListAsync();
+        mapper.Map(Student, basicInfo);
+        basicInfo.CountryId = Student.CountryId;
+        if (Student.StateId != null)
+        {
+            states = await context.States.Where(s => s.CountryId == Student.CountryId).ToListAsync();
+            basicInfo.StateId = Student.StateId;
+
+        }
+        StateHasChanged();
+        isLoading = false;
+    }
+
+    private async void UpdateCountryStates(ChangeEventArgs e)
+    {
+        basicInfo.CountryId = e.Value.ToString();
+        states = await context.States.Where(s => s.CountryId == basicInfo.CountryId).OrderByDescending(s => s.NameAr).ToListAsync();
+        StateHasChanged();
+    }
+
+    private async void HandleValidSubmit()
+    {
+        isLoading = true;
+        mapper.Map(basicInfo, Student);
+        context.Students.Update(Student);
+        var result = await context.SaveChangesAsync();
+        if (result > 0)
+        {
+            Console.WriteLine(result);
+            NavManager.NavigateTo($"/step-2/{FormNo}");
+        }
+    }
+
+    private async void GoBack()
+    {
+        NavManager.NavigateTo("/");    
+    }
+}

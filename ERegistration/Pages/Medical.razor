@@ -1,0 +1,138 @@
+﻿@page "/medical/{FormNo}"
+
+@using ERegistration.Pages
+@using global::Shared.Services;
+
+@inject NavigationManager NavManager
+@inject IDbContextFactory<TSTDBContext> DbFactory
+@inject SMSService SMSService
+
+
+
+
+<EditForm Model="@fitnessForm" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+
+    <UniversityHeader></UniversityHeader>
+
+    @if (isLoading)
+    {
+        <Loading />
+    }
+    else
+    {
+
+        @if (student.IsMedicallyFit == null)
+        {
+            <div class="row">
+                <div class="col"></div>
+                <div class="col-3">
+                    <p class="text-center">الرجاء ادخال رقم التذكرة اذا قمت بإجراء الفحص الطبي</p>
+                    <div class="mb-3 text-center">
+                        <label for="Number mb-4">رقم التذكرة</label>
+                        <InputText id="Number" @bind-Value="fitnessForm.TicketNo" class="form-control" style="text-align:center" />
+                        <ValidationMessage For="() => fitnessForm.TicketNo" />
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn d-block btn-primary ">إرسال</button>
+                    </div>
+
+
+                </div>
+                <div class="col"></div>
+            </div>
+        }
+        else
+        {
+            @if (student.IsMedicallyFit == true)
+            {
+                <h3 class="text-success text-center">تهانينا، لقد اجتزت إختبار اللياقة الطبية بنجاح</h3>
+            }
+            else if(student.IsMedicallyFit == false)
+            {
+                <h3 class="text-danger text-center">عفوا، لم تتمكن من اجتياز إختبار اللياقة الطبية </h3>
+
+            
+            }
+
+    }
+
+
+
+
+    }
+</EditForm>
+
+
+@code {
+
+    FitnessForm fitnessForm = new();
+    private Student student;
+    private bool isLoading = true;
+    private TSTDBContext context;
+    private bool isMedicallyFit = false;
+    [Parameter]
+    public string FormNo { get; set; }
+    protected async override Task OnInitializedAsync()
+    {
+        context = DbFactory.CreateDbContext();
+        student = await context.Students
+                    .FirstOrDefaultAsync(s =>
+                        s.AddmissionFormNo == FormNo);
+        isLoading = false;
+
+        await base.OnInitializedAsync();
+    }
+    private async Task HandleValidSubmit()
+    {
+        isLoading = true;
+
+
+        student.IsMedicallyFit = IsMedicallyFit(fitnessForm.TicketNo.ToUpper());
+        context.Students.Update(student);
+        var result = await context.SaveChangesAsync();
+        if (result > 0)
+        {
+            if (student.IsMedicallyFit != null)
+            {
+                if (student.IsMedicallyFit ?? false)
+                {
+                    string message = $"الرقم الجامعي {student.StudentNumber}"
+      + "\n"
+      + $"رسوم التسجيل {student.RegistrationFees}"
+       + "\n"
+      + $"رسوم التامين الصحي {1200}"
+       + "\n"
+      + $"رسوم الدراسة للسمستر  {(student.StudyFees / 2)}"
+      + "\n"
+      + $"المجموع  {(student.StudyFees / 2) + 1200 + student.RegistrationFees}"
+      ;
+                    SMSService.SendFeesSMS(student.Phone, message, "WEB");
+                }
+            }
+
+        }
+
+        StateHasChanged();
+        isLoading = false;
+    }
+
+
+     private readonly char[] _validTickets = { 'A', 'B', 'C', 'D', 'E', 'F' };
+    private bool IsMedicallyFit(string ticket)
+    {
+
+        var ticketChars = ticket.ToCharArray();
+        if (_validTickets.Contains(ticketChars[0]) && _validTickets.Contains(ticketChars[2]))
+        {
+            return true;
+        }
+        return false;
+    }
+    private void Reset()
+    {
+        student = null;
+    }
+
+}

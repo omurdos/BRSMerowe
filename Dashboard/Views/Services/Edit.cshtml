@@ -1,0 +1,49 @@
+@using Core.Entities
+@model ServiceViewModel
+
+
+<div class="row">
+    <div class="col-12">
+        <form asp-controller="Services" asp-action="Edit" method="post">
+            <input type="text" hidden asp-for="Id" />
+            <div class="card">
+                <div class="card-header">
+                    <h5>Edit @Model.Name</h5>
+                </div>
+                <div class="card-body">
+
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label asp-for="@Model.Name">Service Name</label>
+                                <input type="text" class="form-control" asp-for="@Model.Name" disabled>
+                                <span class="text-danger" asp-validation-for="Name"></span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label asp-for="@Model.Fee">Service Fee</label>
+                                <input type="text" class="form-control" asp-for="@Model.Fee">
+                                <span class="text-danger" asp-validation-for="@Model.Fee"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-check">
+                            <input asp-for="@Model.IsActive" class="form-check-input" type="checkbox">
+                            <label class="form-check-label" for="@Model.IsActive">
+                                Is Active
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary  float-right  ml-1">Submit</button>
+                    <a class="btn btn-danger  float-right" asp-controller="PushNotifications"
+                        asp-action="Index">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
