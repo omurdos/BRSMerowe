@@ -10,9 +10,9 @@ namespace Core.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_Payments_CertificateRequestId",
-                table: "Payments");
+            // migrationBuilder.DropIndex(
+            //     name: "IX_Payments_CertificateRequestId",
+            //     table: "Payments");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Payments_CertificateRequestId",

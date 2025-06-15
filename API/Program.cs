@@ -173,38 +173,47 @@ await using (var context = new TSTDBContext())
         var requestStatusesList = new List<RequestStatus> {
         new RequestStatus
             {
+                Id = 5,
         Name = "Pending Payment"
         }
             ,
         new RequestStatus  {
+            Id = 6,
         Name = "Confirmed"
         }
             ,
         new RequestStatus {
+            Id = 7,
         Name = "Ready"
         }
             ,
         new RequestStatus {
+            Id = 8,
         Name = "Collected"
         }
             ,
             new RequestStatus {
+                Id  = 9,
         Name = "Rejected"
         }
             ,
         new RequestStatus {
+            Id = 10,
         Name = "Pending Verification"
         }
             ,
             new RequestStatus {
+                Id = 11,
         Name = "Approved"
         }
             ,
             new RequestStatus {
+        Id = 12,
         Name = "Printed"
         }
             ,
             new RequestStatus {
+        Id = 13,
         Name = "Recieved"
         }
             ,
