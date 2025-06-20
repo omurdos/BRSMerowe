@@ -21,14 +21,82 @@ namespace API.Controllers
         private readonly IMapper _mapper;
         private readonly SMSService _smsService;
         private readonly UserManager<APIUser> _userManager;
-        public StudentsController(TSTDBContext context, IMapper mapper, SMSService sMSService, UserManager<APIUser> userManager)
+        private readonly ILogger<StudentsController> _logger;
+        private readonly FacultyClaimsService _facultyClaimsService;
+
+        public StudentsController(TSTDBContext context, IMapper mapper, SMSService sMSService, UserManager<APIUser> userManager, ILogger<StudentsController> logger, FacultyClaimsService facultyClaimsService)
         {
             _context= context;
             _mapper= mapper;
             _smsService= sMSService;
             _userManager= userManager;
+            _logger = logger;
+            _facultyClaimsService = facultyClaimsService;
+
         }
 
+
+        [HttpGet("GetStudents")]
+        public async Task<IActionResult> GetStudents(
+            string? facultyNumber,
+            string? departmentNumber,
+            int? batchId,
+            int? programId,
+            string? studentNumber,
+            string? query,
+            int pageNumber = 1,
+            int pageSize = 10)
+        {
+            try
+            {
+                _facultyClaimsService.LoadFaculties(HttpContext.User);
+
+                var studentsQuery = _context.Students
+                    .Include(s => s.Department)
+                        .ThenInclude(d => d.Faculty)
+                    .Where(s => s.IsActive == true &&
+                        (batchId == null || batchId == 0 || s.BatchId == batchId) &&
+                        (facultyNumber == null || facultyNumber == "" || s.FacultyNumber == facultyNumber) &&
+                        (programId == null || programId == 0 || s.ProgramId == programId) &&
+                        (departmentNumber == null || departmentNumber == "" || s.DepartmentNumber == departmentNumber) &&
+                        (studentNumber == null || studentNumber == "" || s.StudentNumber == studentNumber) &&
+                        _facultyClaimsService.facultyNumbers.Contains(s.FacultyNumber)
+                    );
+
+                // Special case for search query
+                if (!string.IsNullOrWhiteSpace(query) && string.IsNullOrWhiteSpace(facultyNumber))
+                {
+                    studentsQuery = studentsQuery.Where(s =>
+                        s.StudentNameA.Contains(query) ||
+                        s.StudentNameE.Contains(query) ||
+                        s.StudentNumber.Contains(query) ||
+                        s.Phone.Contains(query));
+                }
+
+                var totalCount = await studentsQuery.CountAsync();
+
+                var students = await studentsQuery
+                    .OrderBy(s => s.StudentNameA) // or any default ordering
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var result = new
+                {
+                    TotalCount = totalCount,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    Students = students
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while fetching students profiles: {Message}", ex.Message);
+                return StatusCode(500, "An error occurred while retrieving students.");
+            }
+        }
 
         [HttpGet]
         public async Task<IActionResult> GetStudentByFormNo([FromQuery] string AdmissionFormNoOrStudentNumber)

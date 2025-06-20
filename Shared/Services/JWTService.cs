@@ -23,26 +23,54 @@ namespace Shared.Services
     {
         private readonly UserManager<APIUser> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly RoleManager<Role> _roleManager;
 
-        public JWTService(UserManager<APIUser> userManager, IConfiguration configuration)
+
+        public JWTService(UserManager<APIUser> userManager, IConfiguration configuration, RoleManager<Role> roleManager)
         {
             this._userManager = userManager;
             this._configuration = configuration;
+            _roleManager = roleManager;
         }
 
         public async Task<string> GenerateToken(APIUser user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var userRole = await _userManager.GetRolesAsync(user);
+
+            string roleslist = string.Join(",", userRole);
+
+            List<Claim> claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+
+            };
+
+            foreach (var role in userRole)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+
+            foreach (var roleName in userRole)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+
+                foreach (var roleClaim in roleClaims)
+                {
+                    claims.Add(new Claim(roleClaim.Type, roleClaim.Value));
+                }
+            }
+
+
+
+
             var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Name, user.UserName),
-                    new Claim(ClaimTypes.NameIdentifier, user.Id),
-                    new Claim(ClaimTypes.Role, userRole[0]),
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddDays(7),
                 Issuer = _configuration["Jwt:Issuer"],
                 Audience = _configuration["Jwt:Audience"],
@@ -60,15 +88,38 @@ namespace Shared.Services
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var userRole = await _userManager.GetRolesAsync(user);
+            string roleslist = string.Join(",", userRole);
+
+            List<Claim> claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+
+            };
+
+            foreach (var role in userRole)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+
+            foreach (var roleName in userRole)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+
+                foreach (var roleClaim in roleClaims)
+                {
+                    claims.Add(new Claim(roleClaim.Type, roleClaim.Value));
+                }
+            }
+
+
+
             var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Name, user.UserName),
-                    new Claim(ClaimTypes.NameIdentifier, user.Id),
-                    new Claim(ClaimTypes.Role, userRole[0]),
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = dateTime,
                 Issuer = _configuration["Jwt:Issuer"],
                 Audience = _configuration["Jwt:Audience"],
@@ -81,6 +132,7 @@ namespace Shared.Services
 
 
         }
+
 
         public async Task<string> GenerateRandomToken()
         {

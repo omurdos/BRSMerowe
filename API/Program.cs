@@ -63,6 +63,8 @@ builder.Services.AddTransient<ImageUploadService, ImageUploadService>();
 builder.Services.AddTransient<ImageProcessingService, ImageProcessingService>();
 builder.Services.AddTransient<FileUploadService, FileUploadService>();
 builder.Services.AddDbContext<TSTDBContext>();
+builder.Services.AddScoped<FacultyClaimsService, FacultyClaimsService>();
+
 
 
 builder.Services.AddIdentity<APIUser, Role>(

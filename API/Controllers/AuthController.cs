@@ -91,16 +91,60 @@ namespace API.Controllers
                 _logger.LogInformation("user trying to login with credentials {@dto}", dto);
                 if (ModelState.IsValid)
                 {
-                    var user = await _userManager
-                        .Users
-                        .Include(u => u.Student)
-                        .ThenInclude(u => u.Batch)
-                        .Include(u => u.Student)
-                        .ThenInclude(u => u.Department)
-                        .ThenInclude(u => u.Faculty)
-                        .Include(u => u.Student)
-                        .ThenInclude(u => u.Guardian)
-                        .FirstOrDefaultAsync(u => u.PhoneNumber == dto.PhoneNumber);
+                    APIUser user;
+                    PasswordVerificationResult result;
+                    var tempUser = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == dto.PhoneNumber);
+
+                    var userRoles = await _userManager.GetRolesAsync(tempUser);
+
+                    if (!userRoles.Contains("Student"))
+                    {
+                        _logger.LogInformation("user trying to login with credentials {@dto}", dto);
+                        if (ModelState.IsValid)
+                        {
+                            user = await _userManager.FindByNameAsync(dto.PhoneNumber);
+                            if (user == null)
+                            {
+                                return NotFound(
+                                    new
+                                    {
+                                        Message = "Incorrect phone number or password"
+                                    });
+                            }
+
+                            result =
+                               _userManager.PasswordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password);
+                            if (result == PasswordVerificationResult.Success)
+                            {
+                                var token = await _jWTGenerator.GenerateToken(user, DateTime.Now.AddDays(20));
+                                _logger.LogInformation("user details {@user} with token {@token}", user, token);
+                                return Ok(new { user, token });
+                            }
+
+                            return NotFound(
+                                new
+                                {
+                                    Message = "Incorrect phone number or password"
+                                });
+                        }
+
+                        return BadRequest(new
+                        {
+                            Message = "Please provide both phone number and password"
+                        });
+                    }
+
+
+                    user = await _userManager
+                       .Users
+                       .Include(u => u.Student)
+                       .ThenInclude(u => u.Batch)
+                       .Include(u => u.Student)
+                       .ThenInclude(u => u.Department)
+                       .ThenInclude(u => u.Faculty)
+                       .Include(u => u.Student)
+                       .ThenInclude(u => u.Guardian)
+                       .FirstOrDefaultAsync(u => u.PhoneNumber == dto.PhoneNumber);
 
                     if (user == null)
                     {
@@ -111,12 +155,13 @@ namespace API.Controllers
                             });
                     }
 
-                    var result =
-                        _userManager.PasswordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password);
+                    result =
+                       _userManager.PasswordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password);
                     if (result == PasswordVerificationResult.Success)
                     {
-                        _logger.LogInformation("user using {@device}", dto.Device );
-                        if (dto.Device != null) {
+                        _logger.LogInformation("user using {@device}", dto.Device);
+                        if (dto.Device != null)
+                        {
                             await saveDevice(user.Id, dto.Device);
                         }
                         //Generate token and build successful user response
