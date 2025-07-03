@@ -14,8 +14,10 @@ namespace Shared.Services
 
     public class FirebaseService
     {
+        private readonly ILogger<FirebaseService> _logger;
         public FirebaseService(ILogger<FirebaseService> Logger, string CredentialFilePath)
         {
+            _logger = Logger;
             // Initialize Firebase Admin SDK only once
             if (FirebaseApp.DefaultInstance == null)
             {
@@ -30,32 +32,43 @@ namespace Shared.Services
 
         public async Task<string> SendNotificationAsync(string deviceToken, string title, string body)
         {
-            // Create a message object
-            var message = new Message()
+            try
             {
-                Token = deviceToken,
-                Notification = new Notification()
+                // Create a message object
+                var message = new Message()
                 {
-                    Title = title,
-                    Body = body,
-                },
-                // Optional: Add custom data
-                Data = new Dictionary<string, string>
+                    Token = deviceToken,
+                    Notification = new Notification()
+                    {
+                        Title = title,
+                        Body = body,
+                    },
+                    // Optional: Add custom data
+                    Data = new Dictionary<string, string>
             {
                 { "key1", "value1" },
                 { "key2", "value2" },
             }
-            };
+                };
 
-            // Send the notification
-            string response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
-            Console.WriteLine("Message sent successfully: " + response);
-            return response;
+                // Send the notification
+                string response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
+                Console.WriteLine("Message sent successfully: " + response);
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending notification");
+                throw;
+            }
         }
 
         public async Task<BatchResponse> SendMulticastNotificationAsync(List<string> deviceTokens, string title, string body, string route)
         {
-            
+
+
+            try
+            {
 
                 // Create a multicast message object
                 var message = new MulticastMessage()
@@ -70,7 +83,7 @@ namespace Shared.Services
                     Data = new Dictionary<string, string>
         {
             { "route", route },
-          
+
         }
                 };
 
@@ -95,12 +108,19 @@ namespace Shared.Services
                     Console.WriteLine("Failed Tokens: " + string.Join(", ", failedTokens));
                 }
                 return response;
-           
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending multicast notification");
+                throw ex;
+            }
+
         }
 
 
 
-        private string GetCredentialsFilePath() {
+        private string GetCredentialsFilePath()
+        {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 Console.WriteLine("This is a Linux environment.");

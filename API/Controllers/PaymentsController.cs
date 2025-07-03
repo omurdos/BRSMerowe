@@ -2,6 +2,7 @@
 using Core.Entities;
 using Core.Enums;
 using FirebaseAdmin.Messaging;
+using HttpServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,25 +21,36 @@ namespace API.Controllers
         private readonly TSTDBContext _context;
         ILogger<GeneralCertificatesController> _logger;
         private readonly FileUploadService _fileUploadService;
+        private readonly StudentDetailsService _studentDetailsService;
 
-        public PaymentsController(TSTDBContext context, ILogger<GeneralCertificatesController> logger, FileUploadService fileUploadService)
+        public PaymentsController(TSTDBContext context, ILogger<GeneralCertificatesController> logger, FileUploadService fileUploadService, StudentDetailsService studentDetailsService)
         {
             _fileUploadService = fileUploadService;
             _logger = logger;
             _context = context;
+            _studentDetailsService = studentDetailsService;
         }
+        // GET: api/<PaymentsController>
         // GET: api/<PaymentsController>
         [HttpGet("student")]
         public async Task<IActionResult> Get([FromQuery] string studentNumber)
         {
             try
             {
+                var student = await _context.Students
+                 .FirstOrDefaultAsync(s => s.StudentNumber == studentNumber);
+
+                if (student == null)
+                {
+                    return NotFound(new { status = "Failed", message = "Student not found" });
+                }
+
                 var payments = await _context.Payments
                     .Include(p => p.Student)
-                    // .Include(p => p.CardRequest)
-                    // .ThenInclude(cr => cr.Status)
-                    // .Include(p => p.CardRequest)
-                    // .ThenInclude(cr => cr.Service)
+                     // .Include(p => p.CardRequest)
+                     // .ThenInclude(cr => cr.Status)
+                     // .Include(p => p.CardRequest)
+                     // .ThenInclude(cr => cr.Service)
 
                      .Include(p => p.CertificateRequest)
                     .ThenInclude(cr => cr.Status)
@@ -57,6 +69,35 @@ namespace API.Controllers
 
                     .Where(p => p.Student.StudentNumber == studentNumber)
                     .ToListAsync();
+                _logger.LogInformation("Payments retrieved for student: {StudentNumber}", studentNumber);
+                _logger.LogInformation("Payments: {Payments}", payments);
+
+
+                var studentPayments = await _studentDetailsService.GetStudentDetailsFromApi(studentNumber);
+                if (studentPayments != null)
+                {
+                    if (studentPayments.Any())
+                    {
+
+                        foreach (var dto in studentPayments)
+                        {
+                            var payment = new Payment
+                            {
+                                Id = dto.Id.ToString(),
+                                ReferenceNumber = dto.PaymentReference,
+                                Semester = dto.SemesterId.ToString(),
+                                Amount = double.TryParse(dto.PaymentAmount, out var parsedAmount) ? parsedAmount : 0,
+                                Student = student,
+                                Status = dto.IsPaid == 0 ? PaymentStatus.PENDING : PaymentStatus.SUCCESS,
+                                CreatedAt = dto.CreatedAt.DateTime
+                            };
+                            payments.Add(payment);
+                        }
+                    }
+
+                }
+
+
                 return Ok(payments);
             }
             catch (Exception ex)
