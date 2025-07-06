@@ -379,7 +379,7 @@ namespace API.Controllers
                 var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, user.PhoneNumber);
                 _logger.LogInformation($"{code} generated successfully for {user.PhoneNumber}");
 
-                var isSent = await _SMSService.SendWhatsApp(user.PhoneNumber, user.Student.StudentNameE, code);
+                var isSent = await _SMSService.SendWhatsApp(user.PhoneNumber, user.Student.StudentNameE ?? user.Student.StudentNameA, code);
                 if (isSent)
                 {
                     var token = await _userManager.GeneratePasswordResetTokenAsync(user);
