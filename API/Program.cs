@@ -1,6 +1,7 @@
 ﻿
 using BRSSinnar.Dashboard.Helpers;
 using Core.Entities;
+using HttpServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -62,8 +63,10 @@ builder.Services.AddTransient<SMSService, SMSService>();
 builder.Services.AddTransient<ImageUploadService, ImageUploadService>();
 builder.Services.AddTransient<ImageProcessingService, ImageProcessingService>();
 builder.Services.AddTransient<FileUploadService, FileUploadService>();
+builder.Services.AddTransient<StudentDetailsService, StudentDetailsService>();
 builder.Services.AddDbContext<TSTDBContext>();
 builder.Services.AddScoped<FacultyClaimsService, FacultyClaimsService>();
+builder.Services.AddHttpClient();
 
 
 
