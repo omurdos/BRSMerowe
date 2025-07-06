@@ -77,39 +77,41 @@ namespace API.Controllers
                 var studentInvoices = await _studentDetailsService.GetStudentInvoices(studentNumber);
 
 
-                if (studentInvoices.Any())
-                {
-
-                    foreach (var studentInvoice in studentInvoices)
+                if (studentInvoices != null) {
+                    if (studentInvoices.Any())
                     {
 
-                        var invoice = new Invoice
+                        foreach (var studentInvoice in studentInvoices)
                         {
 
-                            Id = studentInvoice.Id.ToString(),
-                            ReferenceNumber = studentInvoice.PaymentReference,
-                            CreatedAt = studentInvoice.CreatedAt.DateTime,
-                            PaymentId = studentInvoice.PaymentReference,
-                            Payment = new Payment
+                            var invoice = new Invoice
                             {
-                                Id = studentInvoice.PaymentReference.ToString(),
-                                Amount = double.TryParse(studentInvoice.PaymentAmount, out var parsedAmount) ? parsedAmount : 0,
-                                Semester = studentInvoice.SemesterId.ToString(),
+
+                                Id = studentInvoice.Id.ToString(),
                                 ReferenceNumber = studentInvoice.PaymentReference,
-                                Student = student,
+                                CreatedAt = studentInvoice.CreatedAt.DateTime,
+                                PaymentId = studentInvoice.PaymentReference,
+                                Payment = new Payment
+                                {
+                                    Id = studentInvoice.PaymentReference.ToString(),
+                                    Amount = double.TryParse(studentInvoice.PaymentAmount, out var parsedAmount) ? parsedAmount : 0,
+                                    Semester = studentInvoice.SemesterId.ToString(),
+                                    ReferenceNumber = studentInvoice.PaymentReference,
+                                    Student = student,
 
-                                Status = PaymentStatus.SUCCESS,
+                                    Status = PaymentStatus.SUCCESS,
 
 
-                            }
+                                }
 
 
-                        };
+                            };
 
-                        invoices.Add(invoice);
+                            invoices.Add(invoice);
+
+                        }
 
                     }
-
                 }
 
 
