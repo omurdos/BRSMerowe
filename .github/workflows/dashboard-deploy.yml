@@ -24,7 +24,7 @@ jobs:
         run: dotnet restore Dashboard/Dashboard.csproj
 
       - name: Build and Publish Dashboard
-        run: dotnet publish Dashboard/Dashboard.csproj -c Release -o ./publish
+        run: dotnet publish Dashboard/Dashboard.csproj -c Release -o ./publish/merowe_dashboard
 
       - name: Setup SSH Key
         run: |
@@ -35,5 +35,5 @@ jobs:
 
       - name: Deploy to Ubuntu Server
         run: |
-          scp -r ./publish ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/merowe_dashboard
+          scp -r ./publish/merowe_dashboard/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/merowe_dashboard
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo systemctl restart merowe_dashboard.service"

@@ -24,7 +24,7 @@ jobs:
         run: dotnet restore API/API.csproj
 
       - name: Build and Publish API
-        run: dotnet publish API/API.csproj -c Release -o ./publish
+        run: dotnet publish API/API.csproj -c Release -o ./publish/merowe_api
 
       - name: Setup SSH Key
         run: |
@@ -35,5 +35,5 @@ jobs:
 
       - name: Deploy to production server
         run: |
-          scp -r ./publish/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/merowe_api
+          scp -r ./publish/merowe_api/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/merowe_api
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo systemctl restart merowe_api.service"
