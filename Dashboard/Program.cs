@@ -146,7 +146,7 @@ await using (var context = new TSTDBContext())
                     Id = Guid.NewGuid().ToString(),
                     UserName = "administrator",
                     NormalizedUserName = "ADMINISTRATOR",
-                    Email = "admin@uofs.edu.sd",
+                    Email = "admin@merowe.edu.sd",
                     CreatedAt = DateTime.Now,
                     UpdatedAt = DateTime.Now,
                 };

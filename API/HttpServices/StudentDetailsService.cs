@@ -8,6 +8,8 @@ namespace HttpServices
     public class StudentDetailsService
     {
         private readonly HttpClient _httpClient;
+        private readonly string url = "https://reg-merowe.uofs.edu.sd/api/students/details";
+
 
         public StudentDetailsService(HttpClient httpClient)
         {
@@ -30,7 +32,6 @@ namespace HttpServices
         {
             try {
                 var client = new HttpClient();
-                var url = "https://payment.uofs.edu.sd/api/students/details";
                 var requestBody = new
                 {
                     student_id = studentId,
@@ -65,7 +66,7 @@ namespace HttpServices
             try
             {
                 var client = new HttpClient();
-                var url = "https://payment.uofs.edu.sd/api/students/details";
+                //var url = "https://payment.uofs.edu.sd/api/students/details";
                 var requestBody = new
                 {
                     student_id = studentId,

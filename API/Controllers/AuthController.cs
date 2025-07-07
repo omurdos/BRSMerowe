@@ -281,7 +281,7 @@ namespace API.Controllers
                     if (student == null)
                     {
                         return NotFound(new
-                            { message = $"No Student with student number {student.StudentNumber} found" });
+                            { message = $"No Student with student number {dto.StudentNumberOrFormAddmission} found" });
                     }
                     _logger.LogInformation("Found student with details {@student}", student);
                     if (student != null)
