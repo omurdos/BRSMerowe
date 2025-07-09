@@ -1,6 +1,7 @@
 ﻿using API.DTOs;
 using AutoMapper;
 using Core.Entities;
+using Core.Migrations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -120,6 +121,29 @@ namespace API.Controllers
                 throw;
             }
         }
+
+
+        [HttpGet("RegistrationStatus")]
+        public async Task<IActionResult> GetRegistrationStatus([FromQuery] string AdmissionFormNoOrStudentNumber)
+        {
+            try
+            {
+                var student = await _context
+                    .Students
+                    .FirstOrDefaultAsync(s => s.AddmissionFormNo == AdmissionFormNoOrStudentNumber || s.StudentNumber == AdmissionFormNoOrStudentNumber);
+                if (student != null)
+                {
+                    return Ok(new { student.IsERegistrationComplete });
+                }
+                return NotFound(new { Message = "Student not found" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"{ex}, Occured while fetching student data {AdmissionFormNoOrStudentNumber}");
+                throw;
+            }
+        }
+
 
         [HttpGet("Medical")]
         public async Task<IActionResult> GetStudentMedicalReport([FromQuery] string AdmissionFormNoOrStudentNumber)
