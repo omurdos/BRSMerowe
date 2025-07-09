@@ -15,15 +15,18 @@ namespace Dashboard.Controllers
         private readonly TSTDBContext _dbContext;
         private readonly IMapper _mapper;
         private readonly FirebaseService _firebaseService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
         public CertificateRequestsController(ILogger<CertificateRequestsController> logger,
          TSTDBContext dbContext,
           IMapper mapper,
-          FirebaseService firebaseService)
+          FirebaseService firebaseService,
+          IWebHostEnvironment webHostEnvironment)
         {
             _logger = logger;
             _dbContext = dbContext;
             _mapper = mapper;
             _firebaseService = firebaseService;
+            _webHostEnvironment = webHostEnvironment;
 
         }
         public async Task<IActionResult> Index(int? page)
@@ -112,11 +115,11 @@ namespace Dashboard.Controllers
                             {
                                  title = "Payment Receipt Rejected";
                                  body = $"Your payment receipt for {certificateRequest.Service.Name} has been rejected. Please upload the correct receipt";
-                                await _firebaseService.SendMulticastNotificationAsync(devices.Select(d => d.FCMToken).ToList(), title, body, "");
+                                await _firebaseService.SendMulticastNotificationAsync(devices.Select(d => d.FCMToken).ToList(), title, body, "", _webHostEnvironment.IsDevelopment());
                                  titleAr = "تم رفض إيصال الدفع";
                                  bodyAr = $"تم رفض إيصال الدفع الخاص بك لخدمة {certificateRequest.Service.NameAr}. يرجى رفع الإيصال الصحيح.";
 
-                                await _firebaseService.SendMulticastNotificationAsync(devices.Select(d => d.FCMToken).ToList(), titleAr, bodyAr, "");
+                                await _firebaseService.SendMulticastNotificationAsync(devices.Select(d => d.FCMToken).ToList(), titleAr, bodyAr, "", _webHostEnvironment.IsDevelopment());
                             }
                         }
 
@@ -139,7 +142,7 @@ namespace Dashboard.Controllers
                              bodyAr = $"تمت الموافقة على إيصال الدفع الخاص بك لخدمة {certificateRequest.Service.NameAr}.";
 
 
-                            await _firebaseService.SendMulticastNotificationAsync(devices.Select(d => d.FCMToken).ToList(), titleAr, bodyAr, "");
+                            await _firebaseService.SendMulticastNotificationAsync(devices.Select(d => d.FCMToken).ToList(), titleAr, bodyAr, "", _webHostEnvironment.IsDevelopment());
                         }
                         break;
                     case "Printed":
@@ -159,7 +162,7 @@ namespace Dashboard.Controllers
 
 
 
-                            await _firebaseService.SendMulticastNotificationAsync(devices.Select(d => d.FCMToken).ToList(), titleAr, bodyAr, "");
+                            await _firebaseService.SendMulticastNotificationAsync(devices.Select(d => d.FCMToken).ToList(), titleAr, bodyAr, "", _webHostEnvironment.IsDevelopment());
                         }
                         break;
                     case "Recieved":
@@ -177,7 +180,7 @@ namespace Dashboard.Controllers
                              titleAr = "تم استلام الشهادة";
                              bodyAr = $"تم استلام الشهادة الخاصة بك لخدمة {certificateRequest.Service.NameAr}.";
 
-                            await _firebaseService.SendMulticastNotificationAsync(devices.Select(d => d.FCMToken).ToList(), titleAr, bodyAr, "");
+                            await _firebaseService.SendMulticastNotificationAsync(devices.Select(d => d.FCMToken).ToList(), titleAr, bodyAr, "", _webHostEnvironment.IsDevelopment());
                         }
                         break;
                     default:

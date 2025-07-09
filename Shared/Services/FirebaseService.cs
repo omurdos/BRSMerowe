@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
+using Azure;
 
 namespace Shared.Services
 {
@@ -63,51 +64,63 @@ namespace Shared.Services
             }
         }
 
-        public async Task<BatchResponse> SendMulticastNotificationAsync(List<string> deviceTokens, string title, string body, string route)
+        public async Task<BatchResponse?> SendMulticastNotificationAsync(List<string> deviceTokens, string title, string body, string route, bool dryrun)
         {
 
+            BatchResponse? response = null ;
 
             try
             {
 
-                // Create a multicast message object
-                var message = new MulticastMessage()
+
+                // Assume deviceTokens is your List<string> of tokens
+                var batches = deviceTokens
+                    .Select((token, index) => new { token, index })
+                    .GroupBy(x => x.index / 500)
+                    .Select(g => g.Select(x => x.token).ToList());
+
+
+                foreach (var batch in batches)
                 {
-                    Tokens = deviceTokens, // List of FCM device tokens
-                    Notification = new Notification()
+
+                    // Create a multicast message object
+                    var message = new MulticastMessage()
                     {
-                        Title = title,
-                        Body = body,
-                    },
-                    // Optional: Add custom data
-                    Data = new Dictionary<string, string>
-        {
-            { "route", route },
-
-        }
-                };
-
-                // Send the multicast message
-                var response = await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(message);
-
-                // Log successful deliveries
-                Console.WriteLine($"Messages sent: {response.SuccessCount}, Failed: {response.FailureCount}");
-
-                // Handle failed tokens if needed
-                if (response.FailureCount > 0)
-                {
-                    var failedTokens = new List<string>();
-                    for (int i = 0; i < response.Responses.Count; i++)
-                    {
-                        if (!response.Responses[i].IsSuccess)
+                        Tokens = batch, // List of FCM device tokens
+                        Notification = new Notification()
                         {
-                            failedTokens.Add(deviceTokens[i]); // Keep track of the failed tokens
-                            Console.WriteLine($"Failed to send to {deviceTokens[i]}: {response.Responses[i].Exception}");
+                            Title = title,
+                            Body = body,
+
+                        },
+                        // Optional: Add custom data
+                        Data = new Dictionary<string, string>
+                        {
+                            { "route", route },
+
                         }
-                    }
-                    Console.WriteLine("Failed Tokens: " + string.Join(", ", failedTokens));
+                    };
+
+                    // Send the multicast message
+                    
+                     response = await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(message, dryrun);
+
+                    // Log successful deliveries
+                    _logger.LogInformation($"Messages sent: {response.SuccessCount}, Failed: {response.FailureCount}");
+
+                    _logger.LogWarning($"Failed to send {response.FailureCount} messages.");
+                    Task.Run(() => LogFailedTokens(response, deviceTokens));
+
+
                 }
+
+
                 return response;
+
+
+
+
+
             }
             catch (Exception ex)
             {
@@ -117,6 +130,33 @@ namespace Shared.Services
 
         }
 
+
+
+        private void LogFailedTokens(BatchResponse response, List<string> deviceTokens) {
+
+            try
+            {
+                // Handle failed tokens if needed
+                if (response.FailureCount > 0)
+                {
+                    var failedTokens = new List<string>();
+                    for (int i = 0; i < response.Responses.Count; i++)
+                    {
+                        if (!response.Responses[i].IsSuccess)
+                        {
+                            failedTokens.Add(deviceTokens[i]); // Keep track of the failed tokens
+                            _logger.LogError($"Failed to send to {deviceTokens[i]}: {response.Responses[i].Exception}");
+                        }
+                    }
+                    _logger.LogWarning("Failed Tokens: " + string.Join(", ", failedTokens));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Logging failed tokens failed because {ex}");
+            }
+
+        }
 
 
         private string GetCredentialsFilePath()

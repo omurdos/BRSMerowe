@@ -27,6 +27,7 @@ namespace Dashboard.Controllers
         private readonly FacultyClaimsService _facultyClaimsService;
 
         private readonly UserManager<APIUser> _userManager;
+        private readonly IWebHostEnvironment _env;
         // List<string> facultyNumbers = new List<string>();
         // List<Claim> facultiesClaims = new List<Claim>();
 
@@ -34,7 +35,7 @@ namespace Dashboard.Controllers
         public StudentsProfilesController(ILogger<PushNotificationsController> logger,
 
         TSTDBContext dbContext, IMapper mapper, FirebaseService pushNotificationService, ImageUploadService imageUploadService, ImageProcessingService imageProcessingService, UserManager<APIUser> userManager,
-        FacultyClaimsService facultyClaimsService)
+        FacultyClaimsService facultyClaimsService, IWebHostEnvironment env)
         {
             _logger = logger;
             _dbContext = dbContext;
@@ -44,7 +45,7 @@ namespace Dashboard.Controllers
             _imageProcessingService = imageProcessingService;
             _userManager = userManager;
             _facultyClaimsService = facultyClaimsService;
-
+            _env = env; 
         }
 
 
@@ -183,8 +184,8 @@ namespace Dashboard.Controllers
 
                     var user = await _userManager.Users.Include(u => u.Student).Include(u => u.Devices).FirstOrDefaultAsync(u => u.Student.StudentNumber == student.StudentNumber);
 
-                    var notificationSendResult = await _pushNotificationService.SendMulticastNotificationAsync(user.Devices.Select(d => d.FCMToken).ToList(), "الموافقة على الصورة الشخصية", "تم الموافقة على الصورة الشخصية الخاصة بك", "notification");
-                    var arabicNotificationSendResult = await _pushNotificationService.SendMulticastNotificationAsync(user.Devices.Select(d => d.FCMToken).ToList(), "Profile picture approved", "Your profile picture has been approved", "notification");
+                    var notificationSendResult = await _pushNotificationService.SendMulticastNotificationAsync(user.Devices.Select(d => d.FCMToken).ToList(), "الموافقة على الصورة الشخصية", "تم الموافقة على الصورة الشخصية الخاصة بك", "notification", _env.IsDevelopment());
+                    var arabicNotificationSendResult = await _pushNotificationService.SendMulticastNotificationAsync(user.Devices.Select(d => d.FCMToken).ToList(), "Profile picture approved", "Your profile picture has been approved", "notification", _env.IsDevelopment());
 
                     _logger.LogInformation("Notification sent to user {UserId} with result: {Result}", user.Id, notificationSendResult.SuccessCount);
 
@@ -213,8 +214,8 @@ namespace Dashboard.Controllers
                     };
                     var user = await _userManager.Users.Include(u => u.Student).Include(u => u.Devices).FirstOrDefaultAsync(u => u.Student.StudentNumber == student.StudentNumber);
 
-                    var notificationSendResult = await _pushNotificationService.SendMulticastNotificationAsync(user.Devices.Select(d => d.FCMToken).ToList(), "Profile picture rejected", "Your profile picture has been rejected, please upload a valid photo", "notification");
-                    var arabicNotificationSendResult = await _pushNotificationService.SendMulticastNotificationAsync(user.Devices.Select(d => d.FCMToken).ToList(), "الصورة الشخصية مرفوضة", "تم رفض الصورة الشخصية المرفقة الرجاء ارفاق صورة مطابقة للمواصفات", "notification");
+                    var notificationSendResult = await _pushNotificationService.SendMulticastNotificationAsync(user.Devices.Select(d => d.FCMToken).ToList(), "Profile picture rejected", "Your profile picture has been rejected, please upload a valid photo", "notification", _env.IsDevelopment());
+                    var arabicNotificationSendResult = await _pushNotificationService.SendMulticastNotificationAsync(user.Devices.Select(d => d.FCMToken).ToList(), "الصورة الشخصية مرفوضة", "تم رفض الصورة الشخصية المرفقة الرجاء ارفاق صورة مطابقة للمواصفات", "notification", _env.IsDevelopment());
 
                     _logger.LogInformation("Notification sent to user {UserId} with result: {Result}", user.Id, notificationSendResult.SuccessCount);
 

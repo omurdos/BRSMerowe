@@ -25,10 +25,12 @@ namespace Dashboard.Controllers
         private readonly ImageProcessingService _imageProcessingService;
 
         private readonly UserManager<APIUser> _userManager;
+        private readonly IWebHostEnvironment _env;
+
 
         public AnnouncementsController(ILogger<AnnouncementsController> logger,
 
-        TSTDBContext dbContext, IMapper mapper, FirebaseService pushNotificationService, ImageUploadService imageUploadService, ImageProcessingService imageProcessingService, UserManager<APIUser> userManager)
+        TSTDBContext dbContext, IMapper mapper, FirebaseService pushNotificationService, ImageUploadService imageUploadService, ImageProcessingService imageProcessingService, UserManager<APIUser> userManager, IWebHostEnvironment env)
         {
             _logger = logger;
             _dbContext = dbContext;
@@ -37,6 +39,7 @@ namespace Dashboard.Controllers
             _imageUploadService = imageUploadService;
             _imageProcessingService = imageProcessingService;
             _userManager = userManager;
+            _env = env;
 
         }
 
@@ -95,7 +98,7 @@ namespace Dashboard.Controllers
                     if (viewModel.IsDisplayed)
                     {
                         var tokens = await GetTokens(viewModel.DepartmentNumber, viewModel.FacultyNumber, viewModel.BatchId ?? 0, viewModel.ProgramId ?? 0);
-                        _pushNotificationService.SendMulticastNotificationAsync(tokens, announcement.Title, announcement.Description, "announcements");
+                        await _pushNotificationService.SendMulticastNotificationAsync(tokens, announcement.Title, announcement.Description, "announcements", _env.IsDevelopment() );
                     }
                     await _dbContext.Announcement.AddAsync(announcement);
                     await _dbContext.SaveChangesAsync();
@@ -183,7 +186,7 @@ namespace Dashboard.Controllers
                     if (viewModel.IsDisplayed)
                     {
                         var tokens = await GetTokens(viewModel.DepartmentNumber, viewModel.FacultyNumber, viewModel.BatchId ?? 0, viewModel.ProgramId ?? 0);
-                        _pushNotificationService.SendMulticastNotificationAsync(tokens, announcement.Title, announcement.Description, "announcements");
+                        await _pushNotificationService.SendMulticastNotificationAsync(tokens, announcement.Title, announcement.Description, "announcements", _env.IsDevelopment());
                     }
 
                     _dbContext.Announcement.Update(announcement);

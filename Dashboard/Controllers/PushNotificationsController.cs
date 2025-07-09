@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Shared.Services;
 using System.Data;
 using X.PagedList;
@@ -20,12 +21,16 @@ namespace Dashboard.Controllers
         private readonly TSTDBContext _dbContext;
         private readonly IMapper _mapper;
         private readonly FirebaseService _pushNotificationService;
-        public PushNotificationsController(ILogger<PushNotificationsController> logger, TSTDBContext dbContext, IMapper mapper, FirebaseService pushNotificationService)
+        private readonly IWebHostEnvironment _env;
+
+        public PushNotificationsController(ILogger<PushNotificationsController> logger, TSTDBContext dbContext, IMapper mapper, FirebaseService pushNotificationService, IWebHostEnvironment env)
         {
             _logger = logger;
             _dbContext = dbContext;
             _mapper = mapper;
             _pushNotificationService = pushNotificationService;
+            _env=env;
+
         }
         // GET: PushNotificationsController
         public async Task<ActionResult> Index(int? page)
@@ -157,16 +162,28 @@ namespace Dashboard.Controllers
                         if (tokens.Count > 0)
                         {
                             var sendResult = await _pushNotificationService
-                              .SendMulticastNotificationAsync(tokens, viewModel.Title, viewModel.Message, "notifications");
-                            if (sendResult.SuccessCount > 0)
+                              .SendMulticastNotificationAsync(tokens, viewModel.Title, viewModel.Message, "notifications", _env.IsDevelopment());
+
+                            if (sendResult!= null)
                             {
-                                TempData["SuccessMessage"] = $"<strong>Success!</strong>, Notification was sent to {sendResult} Students successfully.";
-                                return RedirectToAction(nameof(Index));
+                                if (sendResult.SuccessCount > 0)
+                                {
+                                    TempData["SuccessMessage"] = $"<strong>Success!</strong>, Notification was sent to {sendResult} Students successfully.";
+                                    return RedirectToAction(nameof(Index));
+                                }
+                                else
+                                {
+                                    return RedirectToAction(nameof(Index));
+                                }
                             }
-                            else
-                            {
+                            else {
+
+                                TempData["errorMessage"] = $"<strong>Error!</strong>, Notification was not sent to any Students.";
                                 return RedirectToAction(nameof(Index));
+
                             }
+
+                            
 
                         }
 
