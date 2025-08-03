@@ -1,4 +1,5 @@
 ﻿
+using API.HttpServices;
 using BRSSinnar.Dashboard.Helpers;
 using Core.Entities;
 using HttpServices;
@@ -18,18 +19,6 @@ builder.Logging.AddSerilog();
 
 var configuration  = new ConfigurationBuilder().AddJsonFile("appsettings.json")
      .Build();
-
-// if(builder.Environment.IsDevelopment())
-// {
-//     configuration = new ConfigurationBuilder().AddJsonFile("appsettings.Development.json")
-//     .Build();
-// }
-// else
-// {
-//     configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json")
-//     .Build();
-
-// }
 
 
 
@@ -59,6 +48,7 @@ builder.Services.AddSwaggerGen(options =>
     );
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddTransient<IJWTService, JWTService>();
+builder.Services.AddTransient<ImageValidationService, ImageValidationService>();
 builder.Services.AddTransient<SMSService, SMSService>();
 builder.Services.AddTransient<ImageUploadService, ImageUploadService>();
 builder.Services.AddTransient<ImageProcessingService, ImageProcessingService>();

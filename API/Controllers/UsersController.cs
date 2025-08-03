@@ -1,4 +1,5 @@
 ﻿using API.DTOs;
+using API.HttpServices;
 using AutoMapper;
 using Core.Entities;
 using Core.Models;
@@ -28,8 +29,10 @@ namespace API.Controllers
         private readonly SMSService _smsService;
         private readonly ImageProcessingService _imageProcessingService;
         private readonly ILogger<UsersController> _logger;
+        private readonly ImageValidationService _imageValidationService;
 
-        public UsersController(UserManager<APIUser> userManager, ImageUploadService imageUploadService, TSTDBContext context, IMapper mapper, SMSService smsService, ImageProcessingService imageProcessingService, ILogger<UsersController> logger)
+        public UsersController(UserManager<APIUser> userManager, ImageUploadService imageUploadService, TSTDBContext context, IMapper mapper, SMSService smsService, ImageProcessingService imageProcessingService,
+            ILogger<UsersController> logger, ImageValidationService imageValidationService)
         {
             _userManager = userManager;
             _imageUploadService = imageUploadService;
@@ -38,6 +41,9 @@ namespace API.Controllers
             _smsService = smsService;
             _imageProcessingService = imageProcessingService;
             _logger = logger;
+            _imageValidationService = imageValidationService;
+
+
         }
 
         [HttpGet]
@@ -107,8 +113,8 @@ namespace API.Controllers
                     }
                     else
                     {
-
-                        if (_imageProcessingService.IsValidImage(Convert.FromBase64String(dto.Image)))
+                        var isValid = await _imageValidationService.ValidateImage(dto.Image);
+                        if (isValid)
                         {
 
                             var result = await _imageUploadService.Upload(dto.Image, "profile");
