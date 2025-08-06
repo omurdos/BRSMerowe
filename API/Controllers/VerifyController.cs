@@ -59,7 +59,7 @@ namespace API.Controllers
             try
             {
                 if (!ModelState.IsValid) return BadRequest();
-                var user = _userManager.Users.FirstOrDefault(u => u.PhoneNumber == PhoneNumber);
+                var user = _userManager.Users.Include( u => u.Student).FirstOrDefault(u => u.PhoneNumber == PhoneNumber);
                 if (user == null) return NoContent();
                 var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, user.PhoneNumber);
                 var isSent = await _SMSService.SendWhatsApp(user.PhoneNumber, user.Student.StudentNameE ?? user.Student.StudentNameA, code);
