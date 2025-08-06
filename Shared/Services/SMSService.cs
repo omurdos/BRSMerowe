@@ -402,7 +402,7 @@ namespace Shared.Services
                     {
 
 
-                        if (smsaccess.SendCount == 10)
+                        if (smsaccess.SendCount == 5)
                         {
                             smsaccess.IsBlocked = true;
                             smsaccess.LockedAt = DateTime.Now;
