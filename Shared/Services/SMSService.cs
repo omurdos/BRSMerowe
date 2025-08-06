@@ -56,7 +56,7 @@ namespace Shared.Services
             _logger.LogInformation("Sending message through whatsapp");
 
 
-            return await SendWhatsAppMessage(PhoneNumber, FullName, OTP);
+            return await SendWhatsAppMessageWithLimit(PhoneNumber, FullName, OTP);
 
 
 
@@ -326,6 +326,209 @@ namespace Shared.Services
             }
 
         }
+
+
+
+        private async Task<bool> SendWhatsAppMessageWithLimit(string PhoneNumber, string FullName, string OTP)
+        {
+            try
+            {
+
+                //Get current count of SMS sent to this number
+                var smsaccess = await _context.SMSAccesses.FirstOrDefaultAsync(s => s.PhoneNumber == PhoneNumber);
+                //incase we sent any sms to this user
+                if (smsaccess != null)
+                {
+                    // check if phone has been blocked two times then block it foreever
+                    if (smsaccess.BlockCounts >= 2)
+                    {
+                        return false;
+                    }
+                    //if phone number is blocked
+                    if (smsaccess.IsBlocked)
+                    {
+                        //check if the user should be unblocked by the system
+                        var TimeDifference = DateTime.Now.Subtract(smsaccess.LockedAt);
+                        //Unblocking a user
+                        if (TimeDifference > TimeSpan.FromHours(24))
+                        {
+                            //Unblock the user
+                            smsaccess.IsBlocked = false;
+                            //reset sms count
+                            smsaccess.SendCount = 0;
+                            //send sms to the user
+                            _context.SMSAccesses.Update(smsaccess);
+                            var updateResult = await _context.SaveChangesAsync();
+                            if (updateResult > 0)
+                            {
+                                bool IsSent = false;
+
+                                //This is were a lot of SMSs being sent to the users
+                                IsSent = await ExecuteWhatsAppBot(PhoneNumber, FullName, OTP);
+
+                                if (IsSent)
+                                {
+                                    var otp = new OTPCode
+                                    {
+                                        Code= OTP,
+                                        PhoneNumber= PhoneNumber,
+                                        Source = "WhatsApp",
+                                        CreatedAt= DateTime.Now,
+                                        ModifiedAt= DateTime.Now,
+                                    };
+
+                                    await _context.OTPCodes.AddAsync(otp);
+                                    var result = await _context.SaveChangesAsync();
+                                    return true;
+                                }
+                                else
+                                {
+                                    _logger.LogInformation("Failed to send an sms to {phoneNumber}", PhoneNumber);
+
+                                    return false;
+                                }
+
+
+
+
+                            }
+                            return false;
+
+                        }
+                        return false;
+
+                    }
+                    if (!smsaccess.IsBlocked)
+                    {
+
+
+                        if (smsaccess.SendCount == 10)
+                        {
+                            smsaccess.IsBlocked = true;
+                            smsaccess.LockedAt = DateTime.Now;
+                            smsaccess.BlockCounts += 1;
+                            _context.SMSAccesses.Update(smsaccess);
+                            var result = await _context.SaveChangesAsync();
+                            if (result > 0)
+                            {
+                                _logger.LogError("Failed to save sms access update for user blocking");
+                                return false;
+                            }
+                            return false;
+                        }
+
+
+                        //reset sms count
+                        smsaccess.SendCount += 1;
+                        //send sms to the user
+                        _context.SMSAccesses.Update(smsaccess);
+                        var updateResult = await _context.SaveChangesAsync();
+                        if (updateResult > 0)
+                        {
+
+                            var IsSent = await ExecuteWhatsAppBot(PhoneNumber, FullName, OTP);
+
+                            if (IsSent)
+                            {
+                                var otp = new OTPCode
+                                {
+                                    Code= OTP,
+                                    PhoneNumber= PhoneNumber,
+                                    Source = "WhatsApp",
+                                    CreatedAt= DateTime.Now,
+                                    ModifiedAt= DateTime.Now,
+                                };
+
+                                await _context.OTPCodes.AddAsync(otp);
+                                var result = await _context.SaveChangesAsync();
+                                return true;
+                            }
+                            else
+                            {
+                                _logger.LogInformation("Failed to send an sms to {phoneNumber}", PhoneNumber);
+                                return false;
+                            }
+
+
+
+
+                        }
+                        return false;
+                    }
+
+
+
+
+
+                }
+                else
+                {
+
+
+
+                    smsaccess = new SMSAccess
+                    {
+                        PhoneNumber= PhoneNumber,
+                        CreatedAt= DateTime.Now,
+                        IsBlocked  = false,
+                        SendCount= 1,
+                        BlockCounts = 0
+                    };
+
+                    await _context.SMSAccesses.AddAsync(smsaccess);
+                    var addResult = await _context.SaveChangesAsync();
+
+                    if (addResult > 0)
+                    {
+                        var IsSent = await ExecuteWhatsAppBot(PhoneNumber, FullName, OTP);
+
+                        if (IsSent)
+                        {
+                            var otp = new OTPCode
+                            {
+                                Code= OTP,
+                                PhoneNumber= PhoneNumber,
+                                Source = "WhatsApp",
+                                CreatedAt= DateTime.Now,
+                                ModifiedAt= DateTime.Now,
+                            };
+
+                            await _context.OTPCodes.AddAsync(otp);
+                            var result = await _context.SaveChangesAsync();
+                            return true;
+                        }
+                        else
+                        {
+                            _logger.LogInformation("Failed to send an sms to {phoneNumber}", PhoneNumber);
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        return false;
+
+                    }
+
+
+
+                }
+
+                return false;
+
+
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("\nException Caught!");
+                Console.WriteLine("Message :{0} ", e.Message);
+                throw;
+            }
+
+        }
+
+
+
 
 
         private async Task<bool> SendBulk(List<string> phoneNumbers, string Message, string Source)
