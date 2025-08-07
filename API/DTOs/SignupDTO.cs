@@ -5,6 +5,7 @@ namespace API.DTOs
     public class SignupDTO
     {
         [Required]
+        [StringLength(9, MinimumLength = 9)]
         public string PhoneNumber { get; set; }
         [Required]
         public string StudentNumberOrFormAddmission { get; set; }
