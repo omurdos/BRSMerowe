@@ -1,6 +1,13 @@
 ﻿@using Core.Entities
 @model EditStudentViewModel
+@{
 
+    var faculties = ViewBag.faculties as List<Faculty>;
+    var departments = ViewBag.departments as List<Department>;
+    var batches = ViewBag.batches as List<Batch>;
+    var programs = ViewBag.programs as List<Program>;
+
+}
 
 <div class="row">
     <div class="col-12">
@@ -95,6 +102,75 @@
                                 <span class="text-danger" asp-validation-for="Phone"></span>
                             </div>
                     </div>
+                    <div class="row">
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label for="category">Select Faculty</label>
+                                <select id="facultyDropdown" name="facultyId" class="form-control">
+                                    <option value="">-- Select a Faculty --</option>
+                                    @foreach (var faculty in faculties)
+                                    {
+                                        if (Model.FacultyId
+                                        == faculty.FacultyNumber)
+                                        {
+                                            <option value="@faculty.FacultyNumber" selected>@faculty.FacultyNameE</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@faculty.FacultyNumber">@faculty.FacultyNameE</option>
+
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label>Select Department</label>
+                                <select id="departmentDropdown" name="DepartmentId" class="form-control">
+                                    <option value="">-- Select a Department --</option>
+                                    @foreach (var department in departments)
+                                    {
+                                        if (Model.DepartmentId == department.DepartmentNumber)
+                                        {
+                                            <option value="@department.DepartmentNumber" selected>
+                                                @department.DepartmentNameE
+                                            </option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@department.DepartmentNumber">@department.DepartmentNameE</option>
+
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                       
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label>Select Batch</label>
+                                <select id="batchDropdown" name="BatchId" class="form-control">
+                                    <option value="">-- Select a Batch --</option>
+                                    @foreach (var batch in batches)
+                                    {
+                                        if (Model.BatchId == batch.BatchId)
+                                        {
+                                            <option value="@batch.BatchId" selected>@batch.BatchDescription</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@batch.BatchId">@batch.BatchDescription</option>
+
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+
+                    </div>
+
                 </div>
                 <div class="card-footer">
                     <button type="submit" class="btn btn-primary  float-right  ml-1">Submit</button>
@@ -133,6 +209,85 @@
             personalPhoto.src = initialSrc;
             fileInput.value = ""; // Clear the file input
         });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $("#facultyDropdown").change(function () {
+                var facultyNumber = $(this).val();
+
+                $.ajax({
+                    type: "GET",
+                    url: "/api/faculties/departments",
+                    data: { facultyNumber: facultyNumber },
+                    success: function (data) {
+                        console.log(data);
+                        var productDropdown = $("#departmentDropdown");
+                        productDropdown.empty(); // Clear existing options
+                        productDropdown.append('<option value="">-- Select a Department --</option>');
+
+                        $.each(data.$values, function (index, value) {
+
+                            console.log(value.departmentNumber);
+                            console.log(value.departmentNameE);
+
+                            productDropdown.append('<option value="' + value.departmentNumber + '">' + value.departmentNameE + '</option>');
+                        });
+                    }
+                });
+            });
+        });
+
+        $("#departmentDropdown").change(function () {
+            var departmentNumber = $(this).val();
+            var facultyNumber = $("#facultyDropdown").val();
+
+            $.ajax({
+                type: "GET",
+                url: "/batches/getBatches",
+                data: { departmentNumber: departmentNumber, facultyNumber: facultyNumber },
+                success: function (data) {
+                    console.log(data);
+                    var batchDropdown = $("#batchDropdown");
+                    batchDropdown.empty(); // Clear existing options
+                    batchDropdown.append('<option value="">-- Select a Batch --</option>');
+
+                    $.each(data.$values, function (index, value) {
+
+
+
+                        batchDropdown.append('<option value="' + value.batchId + '">' + value.batchDescription + '</option>');
+                    });
+                }
+            });
+        });
+
+
+        $("#batchDropdown").change(function () {
+            var batchId = $(this).val();
+            var facultyNumber = $("#facultyDropdown").val();
+            var departmentNumber = $("#departmentDropdown").val();
+
+            $.ajax({
+                type: "GET",
+                url: "/programs/getPrograms",
+                data: { departmentNumber: departmentNumber, facultyNumber: facultyNumber, batchId: batchId },
+                success: function (data) {
+                    console.log(data);
+                    var programDropdown = $("#programDropdown");
+                    programDropdown.empty(); // Clear existing options
+                    programDropdown.append('<option value="">-- Select a Program --</option>');
+
+                    $.each(data.$values, function (index, value) {
+
+
+
+                        programDropdown.append('<option value="' + value.programId + '">' + value.programNameE + '</option>');
+                    });
+                }
+            });
+        });
+
     </script>
 
 }

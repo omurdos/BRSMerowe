@@ -1,16 +1,17 @@
 ﻿using AutoMapper;
 using Core.Entities;
-using X.PagedList;
+using Core.Models;
+using Dashboard.ViewModel;
+using Emgu.CV.Ocl;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Shared.Services;
 using System.Reflection.Metadata.Ecma335;
-using Dashboard.ViewModel;
-using Microsoft.AspNetCore.Identity;
-using X.PagedList.Extensions;
-using Core.Models;
-using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using X.PagedList;
+using X.PagedList.Extensions;
 
 namespace Dashboard.Controllers
 {
@@ -147,6 +148,7 @@ namespace Dashboard.Controllers
 
                 var student = await _dbContext.Students.Include(s => s.Department)
                     .ThenInclude(d => d.Faculty)
+                    .Include(s => s.Batch)
                     .FirstOrDefaultAsync(s => s.StudentNumber == studentNumber);
 
 
@@ -224,6 +226,7 @@ namespace Dashboard.Controllers
                     return View(editStudentViewModel);
 
                 }
+                await LoadLookups(student.FacultyNumber, student.DepartmentNumber, null, null);
 
                 if (student != null)
                 {
@@ -233,12 +236,23 @@ namespace Dashboard.Controllers
                         StudentNumber = student.StudentNumber,
                         StudentName = student.StudentNameA,
                         Department = student.Department.DepartmentNameA,
+                        DepartmentId = student.Department.DepartmentNumber,
+                        FacultyId = student.Department.Faculty.FacultyNumber,
                         Faculty = student.Department.Faculty.FacultyNameA,
+                        BatchId = student.BatchId,
+                        Batch = student.Batch.BatchDescription,
                         PersonalPhoto = student.PersonalPhoto,
                         Phone = student.Phone,
                         IsStudentCardBlocked = student.IsStudentCardBlocked,
                         IsActive = student.IsActive,
                     };
+
+                    //await LoadLookups(null, null, null, null);
+
+
+
+
+
 
 
                     TempData["Title"] = "Students Profiles";
@@ -262,10 +276,12 @@ namespace Dashboard.Controllers
             {
                 _facultyClaimsService.LoadFaculties(this.User);
 
+
                 if (ModelState.IsValid)
                 {
                     var student = await _dbContext.Students.Include(s => s.Department)
                         .ThenInclude(d => d.Faculty)
+                        .Include(s => s.Batch)
                         .FirstOrDefaultAsync(s => s.StudentNumber == editStudentViewModel.StudentNumber);
 
 
@@ -282,10 +298,12 @@ namespace Dashboard.Controllers
 
                         return RedirectToAction("Index", "StudentsProfiles");
                     }
+                    await LoadLookups(student.FacultyNumber, student.DepartmentNumber, null, null);
 
 
                     if (student != null)
                     {
+
 
                         if (editStudentViewModel.PersonalPhotoFile != null)
                         {
@@ -295,6 +313,7 @@ namespace Dashboard.Controllers
                             {
                                 TempData["Title"] = "Students Profiles";
                                 TempData["Message"] = "Invalid image";
+
                                 return View(editStudentViewModel);
 
                             }
@@ -312,35 +331,44 @@ namespace Dashboard.Controllers
                             {
                                 TempData["Title"] = "Students Profiles";
                                 TempData["Message"] = fileUploadResult.Message;
+
                                 return View(editStudentViewModel);
                             }
 
                         }
 
                         student.IsStudentCardBlocked = editStudentViewModel.IsStudentCardBlocked;
+                        student.FacultyNumber = editStudentViewModel.FacultyId;
+                        student.DepartmentNumber = editStudentViewModel.DepartmentId;
+                        student.BatchId = editStudentViewModel.BatchId;
                         student.IsActive = editStudentViewModel.IsActive;
-                        if (!editStudentViewModel.Phone.Equals(student.Phone))
-                        {
-                            student.Phone = editStudentViewModel.Phone;
-                            var user = await _userManager.Users.Include(u => u.Student).FirstOrDefaultAsync(u => u.Student.StudentNumber == student.StudentNumber);
-                            if (user != null)
+                        if (editStudentViewModel.Phone != null) {
+                            if (!editStudentViewModel.Phone.Equals(student.Phone))
                             {
-                                user.UserName = editStudentViewModel.Phone;
-                                user.NormalizedUserName = editStudentViewModel.Phone.ToUpper();
-                                user.PhoneNumber = editStudentViewModel.Phone;
-                                await _userManager.UpdateAsync(user);
+                                student.Phone = editStudentViewModel.Phone;
+                                var user = await _userManager.Users.Include(u => u.Student).FirstOrDefaultAsync(u => u.Student.StudentNumber == student.StudentNumber);
+                                if (user != null)
+                                {
+                                    user.UserName = editStudentViewModel.Phone;
+                                    user.NormalizedUserName = editStudentViewModel.Phone.ToUpper();
+                                    user.PhoneNumber = editStudentViewModel.Phone;
+                                    await _userManager.UpdateAsync(user);
+                                }
                             }
                         }
+                        
                         _dbContext.Students.Update(student);
                         await _dbContext.SaveChangesAsync();
                         TempData["Title"] = "Students Profiles";
                         return RedirectToAction("Index", "StudentsProfiles");
 
                     }
+
                     return View(editStudentViewModel);
                 }
                 TempData["Title"] = "Students Profiles";
                 TempData["Message"] = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+
                 return View(editStudentViewModel);
             }
             catch (Exception ex)
