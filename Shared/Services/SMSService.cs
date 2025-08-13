@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
@@ -50,17 +51,17 @@ namespace Shared.Services
 
         }
 
-        public async Task<bool> SendWhatsApp(string PhoneNumber, string FullName, string OTP)
-        {
+        //public async Task<bool> SendWhatsApp(string PhoneNumber, string FullName, string OTP)
+        //{
 
-            _logger.LogInformation("Sending message through whatsapp");
-
-
-            return await SendWhatsAppMessageWithLimit(PhoneNumber, FullName, OTP);
+        //    _logger.LogInformation("Sending message through whatsapp");
 
 
+        //    return await SendWhatsAppMessageWithLimit(PhoneNumber, FullName, OTP);
 
-        }
+
+
+        //}
 
         public async Task<bool> BulkSMS(List<string> phonenUmbers, string message, string Source)
         {
@@ -73,10 +74,10 @@ namespace Shared.Services
 
         }
 
-        public async Task<bool> SendFeesSMS(string PhoneNumber, string Message, string Source)
-        {
-            return await Send(PhoneNumber, Message, Source);
-        }
+        //public async Task<bool> SendFeesSMS(string PhoneNumber, string Message, string Source)
+        //{
+        //    return await Send(PhoneNumber, Message, Source);
+        //}
 
         public async Task<bool> Message(string PhoneNumber, string Message, string Source)
         {
@@ -117,9 +118,9 @@ namespace Shared.Services
                             if (updateResult > 0)
                             {
                                 bool IsSent = false;
-                              
+
                                 //This is were a lot of SMSs being sent to the users
-                                IsSent = await ExecuteNilogySMS(PhoneNumber, Message);
+                                IsSent = await ExecuteBarqSMS(PhoneNumber, Message);
 
                                 if (IsSent)
                                 {
@@ -181,7 +182,7 @@ namespace Shared.Services
                         if (updateResult > 0)
                         {
 
-                            var IsSent = await ExecuteNilogySMS(PhoneNumber, Message);
+                            var IsSent = await ExecuteBarqSMS(PhoneNumber, Message);
 
                             if (IsSent)
                             {
@@ -235,7 +236,7 @@ namespace Shared.Services
 
                     if (addResult > 0)
                     {
-                        var IsSent = await ExecuteNilogySMS(PhoneNumber, Message);
+                        var IsSent = await ExecuteBarqSMS(PhoneNumber, Message);
 
                         if (IsSent)
                         {
@@ -281,6 +282,7 @@ namespace Shared.Services
             }
 
         }
+
 
 
         private async Task<bool> SendWhatsAppMessage(string To, string FullName, string OTP)
@@ -591,6 +593,64 @@ namespace Shared.Services
             }
             catch (Exception e)
             {
+                throw;
+            }
+
+        }
+
+
+        private async Task<bool> ExecuteBarqSMS(string phoneNumber, string message)
+        {
+
+            try
+            {
+                var authToken = "11|lztDoMxzMfbkuNAL8nCFAGdftW0CtkrHxiU0qIBAbf1c0331";
+                var uri = $"https://dash.brqsms.com/api/v3/sms/send";
+
+
+                // Data object to send
+                var data = new
+                {
+                    recipient = "249" + phoneNumber,
+                    sender_id = "SmartOTP",
+                    type = "plain",
+                    message = "Your OTP Code is: " + message,
+                };
+
+                // Convert object to JSON
+                var json = System.Text.Json.JsonSerializer.Serialize(data);
+
+                // Create content with JSON format and UTF-8 encoding
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                //client.DefaultRequestHeaders.Add("Authorization", $"Bearer {authToken}");
+                client.DefaultRequestHeaders.Authorization =
+    new AuthenticationHeaderValue("Bearer", authToken);
+
+                HttpResponseMessage response = await client.PostAsync(uri, content);
+                string responseBody = await response.Content.ReadAsStringAsync();
+                var jObject = JObject.Parse(responseBody);
+                var SMSResponse = JsonConvert.DeserializeObject<BarqSMSResponse>(responseBody);
+                if (SMSResponse != null)
+                {
+                    if (SMSResponse.Status!.Equals("success"))
+                    {
+                        _logger.LogInformation("SMS sent successfully to {phoneNumber}", phoneNumber);
+                        _logger.LogInformation("SMS Response: {@response}", SMSResponse);
+                        return true;
+                    }
+                    else
+                    {
+                        _logger.LogError("Failed to send SMS to {phoneNumber}. Response: {@response}", phoneNumber, SMSResponse);
+                        _logger.LogError("SMS Response: {@response}", SMSResponse);
+                        return false;
+                    }
+                }
+                return false;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error while sending SMS: {@ex}", e);
                 throw;
             }
 

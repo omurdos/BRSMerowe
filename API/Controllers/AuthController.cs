@@ -326,7 +326,7 @@ namespace API.Controllers
                             _logger.LogInformation("OTP Code generated successfully");
                             _logger.LogInformation("Sending SMS to Student phone number");
 
-                            var isSent = await _SMSService.SendWhatsApp(user.PhoneNumber,student.StudentNameE ?? student.StudentNameA ,code);
+                            var isSent = await _SMSService.SendSMS(user.PhoneNumber,code, "API");
                             _logger.LogInformation("Middleware response {isSent}", isSent);
                             _logger.LogInformation("User device details {@Device}", dto.Device);
 
@@ -379,7 +379,7 @@ namespace API.Controllers
                 var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, user.PhoneNumber);
                 _logger.LogInformation($"{code} generated successfully for {user.PhoneNumber}");
 
-                var isSent = await _SMSService.SendWhatsApp(user.PhoneNumber, user.Student.StudentNameE ?? user.Student.StudentNameA, code);
+                var isSent = await _SMSService.SendSMS(user.PhoneNumber, code, "API");
                 if (isSent)
                 {
                     var token = await _userManager.GeneratePasswordResetTokenAsync(user);

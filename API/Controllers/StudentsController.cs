@@ -333,7 +333,7 @@ namespace API.Controllers
                                 + "\n"
                                 + "لسداد الرسوم الدراسية في جميع فروع بنك النيل وبنك المزارع التجاري";
 
-                           var isSent = await _smsService.SendFeesSMS(student.Phone, studyFeesMessage, "API");
+                           //var isSent = await _smsService.SendFeesSMS(student.Phone, studyFeesMessage, "API");
                            
 
 

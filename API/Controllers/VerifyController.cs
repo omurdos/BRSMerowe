@@ -39,7 +39,7 @@ namespace API.Controllers
                     return BadRequest();
                 }
                 var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, user.PhoneNumber);
-                var isSent = await _SMSService.SendWhatsApp(user.PhoneNumber, user.Student.StudentNameE ?? user.Student.StudentNameA,code);
+                var isSent = await _SMSService.SendSMS(user.PhoneNumber, code, "API");
                 if (isSent) {
                     return Ok(new { token = code, User = user });
                 }
@@ -62,7 +62,7 @@ namespace API.Controllers
                 var user = _userManager.Users.Include( u => u.Student).FirstOrDefault(u => u.PhoneNumber == PhoneNumber);
                 if (user == null) return NoContent();
                 var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, user.PhoneNumber);
-                var isSent = await _SMSService.SendWhatsApp(user.PhoneNumber, user.Student.StudentNameE ?? user.Student.StudentNameA, code);
+                var isSent = await _SMSService.SendSMS(user.PhoneNumber, code, "API");
                 if (isSent)
                 {
                     return Ok(new { token = code, User = user });

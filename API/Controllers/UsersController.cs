@@ -218,7 +218,7 @@ namespace API.Controllers
       + $"المجموع  {(student.StudyFees / 2) + 1200 + student.RegistrationFees}"
       ;
 
-                                    var isSent = await _smsService.SendFeesSMS(student.Phone, studyFeesMessage, "API");
+                                    //var isSent = await _smsService.SendFeesSMS(student.Phone, studyFeesMessage, "API");
                                 }
 
                                 var updatedUser = await _userManager
