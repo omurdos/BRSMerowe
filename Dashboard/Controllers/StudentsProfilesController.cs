@@ -138,6 +138,72 @@ namespace Dashboard.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Create()
+        {
+            try
+            {
+                //_facultyClaimsService.LoadFaculties(this.User);
+                await LoadLookups(null, null, null, null);
+                return View(new StudentViewModel());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while loading create student profile view: {Message}", ex.Message);
+                throw;
+            }
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(StudentViewModel viewModel)
+        {
+            try
+            {
+              var student = _dbContext.Students.Include(s => s.Department)
+                    .ThenInclude(d => d.Faculty)
+                    .Include(s => s.Batch)
+                    .FirstOrDefault(s => s.StudentNumber == viewModel.StudentNumber);
+                if (student != null) {
+                    TempData["ErrorMessage"] = "Student with the provided number already exists";
+                    return View(viewModel);
+                }
+
+                student = new Core.Entities.Student { 
+                
+                    StudentNumber = viewModel.StudentNumber,
+                    StudentNameA = viewModel.StudentName,
+                    DepartmentNumber = viewModel.DepartmentId,
+                    FacultyNumber = viewModel.FacultyId,
+                    BatchId = viewModel.BatchId,
+                    ProgramId = viewModel.ProgramId,
+                    PersonalPhoto = viewModel.PersonalPhoto,
+                    IsStudentCardBlocked = viewModel.IsStudentCardBlocked,
+                    Phone = viewModel.Phone,
+                    IsActive = viewModel.IsActive, // Default to true, can be changed later
+                    IsERegistrationComplete = viewModel.IsERegistrationComplete // Default to false, can be changed later
+
+                };
+                _dbContext.Students.Add(student);
+                var result = await _dbContext.SaveChangesAsync();
+                if (result > 0)
+                {
+                    TempData["Title"] = "Students Profiles";
+                    TempData["SuccessMessage"] = "Student profile created successfully";
+                   return RedirectToAction("Index", "StudentsProfiles");
+                }
+
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while loading create student profile view: {Message}", ex.Message);
+                throw;
+            }
+        }
+
+
+
 
         [HttpGet]
         public async Task<IActionResult> Edit([FromQuery] string studentNumber, [FromQuery] string decision)
@@ -438,7 +504,7 @@ namespace Dashboard.Controllers
             }
         }
 
-        private async Task LoadLookups(string? facultyNumber, string? departmentNumber, int? batchId, int? programId)
+        private async Task LoadLookups(string facultyNumber, string departmentNumber, int? batchId, int? programId)
         {
             _facultyClaimsService.LoadFaculties(this.User);
 
@@ -446,31 +512,46 @@ namespace Dashboard.Controllers
             var faculties = await _dbContext.Faculties.ToListAsync();
             var departments = await _dbContext.Departments.Where(d => facultyNumber == null ? d.FacultyNumber != facultyNumber : d.FacultyNumber == facultyNumber).ToListAsync();
 
-            var batches = await _dbContext.Students
-            .Where(s => s.FacultyNumber == facultyNumber && s.DepartmentNumber == departmentNumber)
-            .Join(_dbContext.Batches,
-                student => student.BatchId,
-                batch => batch.BatchId,
-                (student, batch) => new Core.Entities.Batch
-                {
-                    BatchId = batch.BatchId,
-                    BatchDescription = batch.BatchDescription,
-                })
-            .Distinct()
-            .ToListAsync();
-            var programs = await _dbContext.Students
-           .Where(s => s.FacultyNumber == facultyNumber && s.DepartmentNumber == departmentNumber && s.BatchId == batchId)
-           .Join(_dbContext.Programs,
-               student => student.ProgramId,
-               program => program.ProgramId,
-               (student, program) => new Core.Entities.Program
-               {
-                   ProgramId = program.ProgramId,
-                   ProgramNameA = program.ProgramNameA,
-                   ProgramNameE = program.ProgramNameE,
-               })
-           .Distinct()
-           .ToListAsync();
+            List<Core.Entities.Batch> batches = [];
+            List<Core.Entities.Program> programs = [];
+            if (facultyNumber == null)
+            {
+                batches = await _dbContext.Batches.ToListAsync();
+                programs = await _dbContext.Programs.ToListAsync();
+            }
+            else {
+                batches = await _dbContext.Students
+               .Where(s => s.FacultyNumber == facultyNumber && s.DepartmentNumber == departmentNumber)
+               .Join(_dbContext.Batches,
+                   student => student.BatchId,
+                   batch => batch.BatchId,
+                   (student, batch) => new Core.Entities.Batch
+                   {
+                       BatchId = batch.BatchId,
+                       BatchDescription = batch.BatchDescription,
+                   })
+               .Distinct()
+               .ToListAsync();
+
+                programs = await _dbContext.Students
+        .Where(s => s.FacultyNumber == facultyNumber && s.DepartmentNumber == departmentNumber && s.BatchId == batchId)
+        .Join(_dbContext.Programs,
+            student => student.ProgramId,
+            program => program.ProgramId,
+            (student, program) => new Core.Entities.Program
+            {
+                ProgramId = program.ProgramId,
+                ProgramNameA = program.ProgramNameA,
+                ProgramNameE = program.ProgramNameE,
+            })
+        .Distinct()
+        .ToListAsync();
+            }
+
+           
+
+
+          
 
             //var batches = await _dbContext.Batches.Where(b => batchId == null || batchId == 0 ? b. != batchId : b.BatchId == batchId).ToListAsync();
             //var programs = await _dbContext.Programs.Where(p => programId == null || programId == 0 ? p.ProgramId != programId : p.ProgramId == programId).ToListAsync();

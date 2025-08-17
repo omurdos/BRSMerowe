@@ -1,0 +1,276 @@
+﻿@using Core.Entities
+@model StudentViewModel
+@{
+
+    var faculties = ViewBag.faculties as List<Faculty>;
+    var departments = ViewBag.departments as List<Department>;
+    var batches = ViewBag.batches as List<Batch>;
+    var programs = ViewBag.Programs as List<Program>;
+
+}
+
+<div class="row">
+    <div class="col-12">
+        <form asp-controller="StudentsProfiles" asp-action="Create" method="post" enctype="multipart/form-data">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Create @Model.StudentName</h5>
+                </div>
+                <div class="card-body">
+                    @* <div class="container mt-5 text-center">
+                        <div class="card p-3 shadow" style="width: 250px; margin: auto;">
+                            <img src="/images/profile/@Model.PersonalPhoto" class="img-thumbnail rounded"
+                                 id="personalPhoto" alt="Personal Photo">
+                            <div class="mb-3">
+                                <label for="fileInput" class="form-label">Upload Image</label>
+                                <input type="file" class="form-control" id="fileInput"
+                                       asp-for="@Model.PersonalPhotoFile" accept="image/*">
+                            </div>
+                            <div class="mt-3">
+                                <button type="button" id="resetButton" class="btn btn-danger">Reset Image</button>
+                            </div>
+                            <div class="mt-3">
+                                <a class="btn btn-success me-2" asp-action="Edit" asp-controller="StudentsProfiles"
+                                   asp-route-studentNumber="@Model.StudentNumber" asp-route-decision="approve">
+                                    ✅
+                                    Approved
+                                </a>
+                                <a class="btn btn-danger" asp-action="Edit" asp-controller="StudentsProfiles"
+                                   asp-route-studentNumber="@Model.StudentNumber" asp-route-decision="reject">
+                                    ❌
+                                    Reject
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <img src="" />
+                    </div> *@
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label asp-for="StudentName">Student Name</label>
+                                <input type="text" class="form-control" asp-for="StudentName">
+                                <span class="text-danger" asp-validation-for="StudentName"></span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label asp-for="StudentNumber">Student Number</label>
+                                <input type="text" class="form-control" asp-for="StudentNumber">
+                                <span class="text-danger" asp-validation-for="StudentNumber"></span>
+                            </div>
+                        </div>
+                    </div>
+                  
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input asp-for="IsStudentCardBlocked" class="form-check-input" type="checkbox">
+                                <label class="form-check-label" for="IsStudentCardBlocked">
+                                    Is Student Card Blocked
+                                </label>
+                            </div>
+
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox">
+                                <label class="form-check-label" for="IsActive">
+                                    Registration Enabled ?
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input asp-for="IsERegistrationComplete" class="form-check-input" type="checkbox">
+                                <label class="form-check-label" for="IsE">
+                                    Registration Completed ?
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group">
+                            <label asp-for="Phone">Student Phone</label>
+                            <input type="text" class="form-control" asp-for="Phone" value="@Model.Phone" maxlength="9" minlength="9">
+                            <span class="text-danger" asp-validation-for="Phone"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label for="category">Select Faculty</label>
+                                <select id="facultyDropdown" name="facultyId" class="form-control">
+                                    <option value="">-- Select a Faculty --</option>
+                                    @foreach (var faculty in faculties)
+                                    {
+                                        <option value="@faculty.FacultyNumber">@faculty.FacultyNameE</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label>Select Department</label>
+                                <select id="departmentDropdown" name="DepartmentId" class="form-control">
+                                    <option value="">-- Select a Department --</option>
+                                    @foreach (var department in departments)
+                                    {
+                                        <option value="@department.DepartmentNumber">@department.DepartmentNameE</option>
+
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label>Select Batch</label>
+                                <select id="batchDropdown" name="BatchId" class="form-control">
+                                    <option value="">-- Select a Batch --</option>
+                                    @foreach (var batch in batches)
+                                    {
+                                        <option value="@batch.BatchId">@batch.BatchDescription</option>
+
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label>Select Program</label>
+                                <select id="programDropdown" name="ProgramId" class="form-control">
+                                    <option value="">-- Select a Program --</option>
+                                    @foreach (var program in programs)
+                                    {
+                                        <option value="@program.ProgramId">@program.ProgramNameE</option>
+
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary  float-right  ml-1">Submit</button>
+                    <a class="btn btn-danger  float-right" asp-controller="PushNotifications"
+                       asp-action="Index">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+@section Script {
+
+
+    <script>
+        const fileInput = document.getElementById("fileInput");
+        const personalPhoto = document.getElementById("personalPhoto");
+        const resetButton = document.getElementById("resetButton");
+
+        // Store the initial image src
+        const initialSrc = personalPhoto.src;
+
+        fileInput.addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    personalPhoto.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        resetButton.addEventListener("click", function () {
+            personalPhoto.src = initialSrc;
+            fileInput.value = ""; // Clear the file input
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $("#facultyDropdown").change(function () {
+                var facultyNumber = $(this).val();
+
+                $.ajax({
+                    type: "GET",
+                    url: "/api/faculties/departments",
+                    data: { facultyNumber: facultyNumber },
+                    success: function (data) {
+                        console.log(data);
+                        var productDropdown = $("#departmentDropdown");
+                        productDropdown.empty(); // Clear existing options
+                        productDropdown.append('<option value="">-- Select a Department --</option>');
+
+                        $.each(data.$values, function (index, value) {
+
+                            console.log(value.departmentNumber);
+                            console.log(value.departmentNameE);
+
+                            productDropdown.append('<option value="' + value.departmentNumber + '">' + value.departmentNameE + '</option>');
+                        });
+                    }
+                });
+            });
+        });
+
+        $("#departmentDropdown").change(function () {
+            var departmentNumber = $(this).val();
+            var facultyNumber = $("#facultyDropdown").val();
+
+            $.ajax({
+                type: "GET",
+                url: "/batches/getBatches",
+                data: { departmentNumber: departmentNumber, facultyNumber: facultyNumber },
+                success: function (data) {
+                    console.log(data);
+                    var batchDropdown = $("#batchDropdown");
+                    batchDropdown.empty(); // Clear existing options
+                    batchDropdown.append('<option value="">-- Select a Batch --</option>');
+
+                    $.each(data.$values, function (index, value) {
+
+
+
+                        batchDropdown.append('<option value="' + value.batchId + '">' + value.batchDescription + '</option>');
+                    });
+                }
+            });
+        });
+
+
+        $("#batchDropdown").change(function () {
+            var batchId = $(this).val();
+            var facultyNumber = $("#facultyDropdown").val();
+            var departmentNumber = $("#departmentDropdown").val();
+
+            $.ajax({
+                type: "GET",
+                url: "/programs/getPrograms",
+                data: { departmentNumber: departmentNumber, facultyNumber: facultyNumber, batchId: batchId },
+                success: function (data) {
+                    console.log(data);
+                    var programDropdown = $("#programDropdown");
+                    programDropdown.empty(); // Clear existing options
+                    programDropdown.append('<option value="">-- Select a Program --</option>');
+
+                    $.each(data.$values, function (index, value) {
+
+
+
+                        programDropdown.append('<option value="' + value.programId + '">' + value.programNameE + '</option>');
+                    });
+                }
+            });
+        });
+
+    </script>
+
+}
