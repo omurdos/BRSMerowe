@@ -16,6 +16,8 @@ namespace API.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
+
+
         private UserManager<APIUser> _userManager { get; set; }
         private readonly IJWTService _jWTGenerator;
         private readonly IMapper _mapper;
