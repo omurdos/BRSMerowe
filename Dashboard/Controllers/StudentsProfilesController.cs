@@ -178,6 +178,7 @@ namespace Dashboard.Controllers
                     ProgramId = viewModel.ProgramId,
                     PersonalPhoto = viewModel.PersonalPhoto,
                     IsStudentCardBlocked = viewModel.IsStudentCardBlocked,
+                    IsMedicallyFit = true, // Default to true, can be changed later
                     Phone = viewModel.Phone,
                     IsActive = viewModel.IsActive, // Default to true, can be changed later
                     IsERegistrationComplete = viewModel.IsERegistrationComplete // Default to false, can be changed later
