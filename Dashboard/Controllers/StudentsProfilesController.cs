@@ -159,12 +159,14 @@ namespace Dashboard.Controllers
         {
             try
             {
-              var student = _dbContext.Students.Include(s => s.Department)
+                TempData["Title"] = "Students Profiles";
+
+                var student = _dbContext.Students.Include(s => s.Department)
                     .ThenInclude(d => d.Faculty)
                     .Include(s => s.Batch)
-                    .FirstOrDefault(s => s.StudentNumber == viewModel.StudentNumber);
+                    .FirstOrDefault(s => s.StudentNumber == viewModel.StudentNumber || s.Phone == viewModel.Phone);
                 if (student != null) {
-                    TempData["ErrorMessage"] = "Student with the provided number already exists";
+                    TempData["ErrorMessage"] = "Student with the provided student number or phone number already exists";
                     return View(viewModel);
                 }
 
@@ -188,13 +190,12 @@ namespace Dashboard.Controllers
                 var result = await _dbContext.SaveChangesAsync();
                 if (result > 0)
                 {
-                    TempData["Title"] = "Students Profiles";
                     TempData["SuccessMessage"] = "Student profile created successfully";
                    return RedirectToAction("Index", "StudentsProfiles");
                 }
 
 
-                return View();
+                return View(viewModel);
             }
             catch (Exception ex)
             {
@@ -222,7 +223,7 @@ namespace Dashboard.Controllers
                 if (student == null)
                 {
                     TempData["Title"] = "Students Profiles";
-                    TempData["Message"] = "Student not found";
+                    TempData["ErrorMessage"] = "Student not found";
                     return RedirectToAction("Index", "StudentsProfiles");
 
                 }
@@ -259,7 +260,7 @@ namespace Dashboard.Controllers
                     _logger.LogInformation("Notification sent to user {UserId} with result: {Result}", user.Id, notificationSendResult.SuccessCount);
 
                     TempData["Title"] = "Students Profiles";
-                    TempData["Message"] = "Profile picture approved successfully";
+                    TempData["SuccessMessage"] = "Profile picture approved successfully";
                     return View(editStudentViewModel);
 
                 }
@@ -289,7 +290,7 @@ namespace Dashboard.Controllers
                     _logger.LogInformation("Notification sent to user {UserId} with result: {Result}", user.Id, notificationSendResult.SuccessCount);
 
                     TempData["Title"] = "Students Profiles";
-                    TempData["Message"] = "Profile picture rejected successfully";
+                    TempData["SuccessMessage"] = "Profile picture rejected successfully";
                     return View(editStudentViewModel);
 
                 }
@@ -355,7 +356,7 @@ namespace Dashboard.Controllers
                     if (student == null)
                     {
                         TempData["Title"] = "Students Profiles";
-                        TempData["Message"] = "Student not found";
+                        TempData["ErrorMessage"] = "Student not found";
                         return RedirectToAction("Index", "StudentsProfiles");
 
                     }
@@ -379,7 +380,7 @@ namespace Dashboard.Controllers
                             if (!_imageProcessingService.IsValidImage(uploadedImage))
                             {
                                 TempData["Title"] = "Students Profiles";
-                                TempData["Message"] = "Invalid image";
+                                TempData["ErrorMessage"] = "Invalid image";
 
                                 return View(editStudentViewModel);
 
@@ -397,7 +398,7 @@ namespace Dashboard.Controllers
                             else if (!fileUploadResult.Succeed)
                             {
                                 TempData["Title"] = "Students Profiles";
-                                TempData["Message"] = fileUploadResult.Message;
+                                TempData["SuccessMessage"] = fileUploadResult.Message;
 
                                 return View(editStudentViewModel);
                             }
@@ -434,7 +435,7 @@ namespace Dashboard.Controllers
                     return View(editStudentViewModel);
                 }
                 TempData["Title"] = "Students Profiles";
-                TempData["Message"] = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                TempData["ErrorMessage"] = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
 
                 return View(editStudentViewModel);
             }
@@ -459,7 +460,7 @@ namespace Dashboard.Controllers
                 if (user == null)
                 {
                     TempData["Title"] = "Students Profiles";
-                    TempData["Message"] = "Student not found";
+                    TempData["ErrorMessage"] = "Student not found";
                     return RedirectToAction("Index", "StudentsProfiles");
 
                 }
@@ -476,7 +477,7 @@ namespace Dashboard.Controllers
                 if (user == null)
                 {
                     TempData["Title"] = "Students Profiles";
-                    TempData["Message"] = "User does not exist";
+                    TempData["ErrorMessage"] = "User does not exist";
                     return RedirectToAction("Index", "StudentsProfiles");
                 }
                 var userDevices = await _dbContext.Devices.Where(d => d.APIUser.Id == user.Id).ToListAsync();
@@ -494,7 +495,7 @@ namespace Dashboard.Controllers
                 await _userManager.DeleteAsync(userAccountToDelete);
 
                 TempData["Title"] = "Students Profiles";
-                TempData["Message"] = "User deleted successfully";
+                TempData["SuccessMessage"] = "User deleted successfully";
                 return RedirectToAction("Index", "StudentsProfiles");
 
             }

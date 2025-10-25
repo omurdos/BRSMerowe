@@ -275,7 +275,7 @@ namespace API.Controllers
                         .Include(u => u.Batch)
                         .Include(u => u.Department)
                         .ThenInclude(u => u.Faculty)
-                        .Include(u => u.Guardian)
+                        //.Include(u => u.Guardian)
                         .FirstOrDefaultAsync(s =>
                             s.StudentNumber == dto.StudentNumberOrFormAddmission ||
                             s.AddmissionFormNo == dto.StudentNumberOrFormAddmission);
