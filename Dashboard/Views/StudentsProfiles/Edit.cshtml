@@ -238,55 +238,55 @@
             });
         });
 
-        $("#departmentDropdown").change(function () {
-            var departmentNumber = $(this).val();
-            var facultyNumber = $("#facultyDropdown").val();
+        // $("#departmentDropdown").change(function () {
+        //     var departmentNumber = $(this).val();
+        //     var facultyNumber = $("#facultyDropdown").val();
 
-            $.ajax({
-                type: "GET",
-                url: "/batches/getBatches",
-                data: { departmentNumber: departmentNumber, facultyNumber: facultyNumber },
-                success: function (data) {
-                    console.log(data);
-                    var batchDropdown = $("#batchDropdown");
-                    batchDropdown.empty(); // Clear existing options
-                    batchDropdown.append('<option value="">-- Select a Batch --</option>');
+        //     $.ajax({
+        //         type: "GET",
+        //         url: "/batches/getBatches",
+        //         data: { departmentNumber: departmentNumber, facultyNumber: facultyNumber },
+        //         success: function (data) {
+        //             console.log(data);
+        //             var batchDropdown = $("#batchDropdown");
+        //             batchDropdown.empty(); // Clear existing options
+        //             batchDropdown.append('<option value="">-- Select a Batch --</option>');
 
-                    $.each(data.$values, function (index, value) {
-
-
-
-                        batchDropdown.append('<option value="' + value.batchId + '">' + value.batchDescription + '</option>');
-                    });
-                }
-            });
-        });
-
-
-        $("#batchDropdown").change(function () {
-            var batchId = $(this).val();
-            var facultyNumber = $("#facultyDropdown").val();
-            var departmentNumber = $("#departmentDropdown").val();
-
-            $.ajax({
-                type: "GET",
-                url: "/programs/getPrograms",
-                data: { departmentNumber: departmentNumber, facultyNumber: facultyNumber, batchId: batchId },
-                success: function (data) {
-                    console.log(data);
-                    var programDropdown = $("#programDropdown");
-                    programDropdown.empty(); // Clear existing options
-                    programDropdown.append('<option value="">-- Select a Program --</option>');
-
-                    $.each(data.$values, function (index, value) {
+        //             $.each(data.$values, function (index, value) {
 
 
 
-                        programDropdown.append('<option value="' + value.programId + '">' + value.programNameE + '</option>');
-                    });
-                }
-            });
-        });
+        //                 batchDropdown.append('<option value="' + value.batchId + '">' + value.batchDescription + '</option>');
+        //             });
+        //         }
+        //     });
+        // });
+
+
+        // $("#batchDropdown").change(function () {
+        //     var batchId = $(this).val();
+        //     var facultyNumber = $("#facultyDropdown").val();
+        //     var departmentNumber = $("#departmentDropdown").val();
+
+        //     $.ajax({
+        //         type: "GET",
+        //         url: "/programs/getPrograms",
+        //         data: { departmentNumber: departmentNumber, facultyNumber: facultyNumber, batchId: batchId },
+        //         success: function (data) {
+        //             console.log(data);
+        //             var programDropdown = $("#programDropdown");
+        //             programDropdown.empty(); // Clear existing options
+        //             programDropdown.append('<option value="">-- Select a Program --</option>');
+
+        //             $.each(data.$values, function (index, value) {
+
+
+
+        //                 programDropdown.append('<option value="' + value.programId + '">' + value.programNameE + '</option>');
+        //             });
+        //         }
+        //     });
+        // });
 
     </script>
 

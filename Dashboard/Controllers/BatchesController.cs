@@ -36,6 +36,18 @@ namespace Dashboard.Controllers
             try
             {
                 _logger.LogInformation("Fetching batches for FacultyNumber: {FacultyNumber}, DepartmentNumber: {DepartmentNumber}", FacultyNumber, DepartmentNumber);
+
+                if (FacultyNumber == null && DepartmentNumber == null ) {
+                    
+                    var allBatches = await _dbContext.Batches.Select(b => new
+                    {
+                        BatchId = b.BatchId,
+                        BatchDescription = b.BatchDescription,
+                    }).Distinct().ToListAsync();
+
+                    return Json(allBatches);
+                }
+
                 var batches = await _dbContext.Students
                 .Where(s => s.FacultyNumber == FacultyNumber && s.DepartmentNumber == DepartmentNumber)
                 .Join(_dbContext.Batches,
