@@ -160,6 +160,7 @@ namespace Dashboard.Controllers
             try
             {
                 TempData["Title"] = "Students Profiles";
+                await LoadLookups(null, null, null, null);
 
                 var student = _dbContext.Students.Include(s => s.Department)
                     .ThenInclude(d => d.Faculty)
