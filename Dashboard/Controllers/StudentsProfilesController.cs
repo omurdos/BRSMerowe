@@ -165,7 +165,7 @@ namespace Dashboard.Controllers
                 var student = _dbContext.Students.Include(s => s.Department)
                     .ThenInclude(d => d.Faculty)
                     .Include(s => s.Batch)
-                    .FirstOrDefault(s => s.StudentNumber == viewModel.StudentNumber || s.Phone == viewModel.Phone);
+                    .FirstOrDefault(s => s.StudentNumber == viewModel.StudentNumber);
                 if (student != null) {
                     TempData["ErrorMessage"] = "Student with the provided student number or phone number already exists";
                     return View(viewModel);
