@@ -6,8 +6,10 @@
     var departments = ViewBag.departments as List<Department>;
     var batches = ViewBag.batches as List<Batch>;
     var programs = ViewBag.programs as List<Program>;
+    var otpCodes = ViewBag.lastOTP as OTPCode;
 
 }
+
 
 <div class="row">
     <div class="col-12">
@@ -20,23 +22,28 @@
                 <div class="card-body">
                     <div class="container mt-5 text-center">
                         <div class="card p-3 shadow" style="width: 250px; margin: auto;">
-                            <img src="/images/profile/@Model.PersonalPhoto" class="img-thumbnail rounded"
-                                id="personalPhoto" alt="Personal Photo">
+
+                            <img src="@(string.IsNullOrEmpty(Model.PersonalPhoto) ? "/images/user.png" : $"/images/profile/{Model.PersonalPhoto}")" class="img-thumbnail rounded"
+                                 id="personalPhoto" alt="Personal Photo">
                             <div class="mb-3">
                                 <label for="fileInput" class="form-label">Upload Image</label>
                                 <input type="file" class="form-control" id="fileInput"
-                                    asp-for="@Model.PersonalPhotoFile" accept="image/*">
+                                       asp-for="@Model.PersonalPhotoFile" accept="image/*">
                             </div>
                             <div class="mt-3">
                                 <button type="button" id="resetButton" class="btn btn-danger">Reset Image</button>
                             </div>
                             <div class="mt-3">
                                 <a class="btn btn-success me-2" asp-action="Edit" asp-controller="StudentsProfiles"
-                                    asp-route-studentNumber="@Model.StudentNumber" asp-route-decision="approve">✅
-                                    Approved</a>
+                                   asp-route-studentNumber="@Model.StudentNumber" asp-route-decision="approve">
+                                    ✅
+                                    Approved
+                                </a>
                                 <a class="btn btn-danger" asp-action="Edit" asp-controller="StudentsProfiles"
-                                    asp-route-studentNumber="@Model.StudentNumber" asp-route-decision="reject">❌
-                                    Reject</a>
+                                   asp-route-studentNumber="@Model.StudentNumber" asp-route-decision="reject">
+                                    ❌
+                                    Reject
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -77,7 +84,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-6">
+                        <div class="col-2">
                             <div class="form-check">
                                 <input asp-for="IsStudentCardBlocked" class="form-check-input" type="checkbox">
                                 <label class="form-check-label" for="IsStudentCardBlocked">
@@ -86,7 +93,7 @@
                             </div>
 
                         </div>
-                        <div class="col-6">
+                        <div class="col-2">
                             <div class="form-check">
                                 <input asp-for="IsActive" class="form-check-input" type="checkbox">
                                 <label class="form-check-label" for="IsActive">
@@ -94,19 +101,41 @@
                                 </label>
                             </div>
                         </div>
+                        <div class="col-2">
+                            <div class="form-check">
+                                <input asp-for="IsERegistrationComplete" class="form-check-input" type="checkbox">
+                                <label class="form-check-label" for="IsERegistrationComplete">
+                                    Registration Completed ?
+                                </label>
+                            </div>
+                        </div>
+                        @if (User.HasClaim("Permission", "ManageIsMedicallyFit"))
+                        {
+
+                            <div class="col-2">
+                                <div class="form-check">
+                                    <input asp-for="IsMedicallyFit" class="form-check-input" type="checkbox">
+                                    <label class="form-check-label" for="IsMedicallyFit">
+                                        Is Medicallyfit?
+                                    </label>
+                                </div>
+                            </div>
+                        }
+
+
                     </div>
                     <div class="row">
-                         <div class="form-group">
-                                <label asp-for="Phone">Student Phone</label>
-                                <input type="text" class="form-control" asp-for="Phone" value="@Model.Phone" maxlength="9" minlength="9">
-                                <span class="text-danger" asp-validation-for="Phone"></span>
-                            </div>
+                        <div class="form-group">
+                            <label asp-for="Phone">Student Phone</label>
+                            <input type="text" class="form-control" asp-for="Phone" value="@Model.Phone" maxlength="9" minlength="9">
+                            <span class="text-danger" asp-validation-for="Phone"></span>
+                        </div>
                     </div>
                     <div class="row">
                         <div class="col-3">
                             <div class="form-group">
                                 <label for="category">Select Faculty</label>
-                                <select id="facultyDropdown" name="facultyId" class="form-control">
+                                <select id="facultyDropdown" name="facultyId" class="form-control" required>
                                     <option value="">-- Select a Faculty --</option>
                                     @foreach (var faculty in faculties)
                                     {
@@ -127,7 +156,7 @@
                         <div class="col-3">
                             <div class="form-group">
                                 <label>Select Department</label>
-                                <select id="departmentDropdown" name="DepartmentId" class="form-control">
+                                <select id="departmentDropdown" name="DepartmentId" class="form-control" required>
                                     <option value="">-- Select a Department --</option>
                                     @foreach (var department in departments)
                                     {
@@ -146,11 +175,13 @@
                                 </select>
                             </div>
                         </div>
-                       
+
+
+
                         <div class="col-3">
                             <div class="form-group">
                                 <label>Select Batch</label>
-                                <select id="batchDropdown" name="BatchId" class="form-control">
+                                <select id="batchDropdown" name="BatchId" class="form-control" required>
                                     <option value="">-- Select a Batch --</option>
                                     @foreach (var batch in batches)
                                     {
@@ -167,20 +198,98 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="col-3">
+                            <div class="form-group">
+                                <label>Select Program</label>
+                                <select id="programDropdown" name="ProgramId" class="form-control" required>
+                                    <option value="">-- Select a Program --</option>
+                                    @foreach (var program in programs)
+                                    {
 
+                                        if (Model.ProgramId == program.ProgramId)
+                                        {
+                                            <option value="@program.ProgramId" selected>@program.ProgramNameE</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@program.ProgramId">@program.ProgramNameE</option>
+
+                                        }
+
+
+
+                                    }
+                                </select>
+                            </div>
+                        </div>
 
                     </div>
 
                 </div>
+
+
+
+
+
                 <div class="card-footer">
                     <button type="submit" class="btn btn-primary  float-right  ml-1">Submit</button>
-                    <a class="btn btn-danger  float-right" asp-controller="PushNotifications"
-                        asp-action="Index">Cancel</a>
+                    <a class="btn btn-danger  float-right" asp-controller="StudentsProfiles"
+                       asp-action="Index">Cancel</a>
                 </div>
             </div>
         </form>
     </div>
 </div>
+
+<!--OTP Codes Table-->
+@if (otpCodes != null)
+{
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-6">
+                    <h5>Last Generated OTP Code</h5>
+                </div>
+                <div class="col-6 text-right">
+                    <a class="btn btn-secondary float-right"
+                       asp-controller="StudentsProfiles"
+                       asp-action="Edit"
+                       asp-route-studentNumber="@Model.StudentNumber"
+                       asp-route-decision="unblock">
+                        Unblock SMS
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <table class="table table-bordered mt-4">
+                <thead>
+                    <tr>
+                        <th>OTP Code</th>
+                        <th>Generated At</th>
+                        <th>Sent To</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@otpCodes.Code</td>
+                        <td>@otpCodes.CreatedAt.ToString("g")</td>
+                        <td>@otpCodes.PhoneNumber</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-info text-center mt-3">
+        No OTP codes found.
+    </div>
+}
+
+
 
 
 @section Script {

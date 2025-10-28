@@ -17,86 +17,6 @@
                     <h5>Create @Model.StudentName</h5>
                 </div>
                 <div class="card-body">
-                    @* <div class="container mt-5 text-center">
-                        <div class="card p-3 shadow" style="width: 250px; margin: auto;">
-                            <img src="/images/profile/@Model.PersonalPhoto" class="img-thumbnail rounded"
-                                 id="personalPhoto" alt="Personal Photo">
-                            <div class="mb-3">
-                                <label for="fileInput" class="form-label">Upload Image</label>
-                                <input type="file" class="form-control" id="fileInput"
-                                       asp-for="@Model.PersonalPhotoFile" accept="image/*">
-                            </div>
-                            <div class="mt-3">
-                                <button type="button" id="resetButton" class="btn btn-danger">Reset Image</button>
-                            </div>
-                            <div class="mt-3">
-                                <a class="btn btn-success me-2" asp-action="Edit" asp-controller="StudentsProfiles"
-                                   asp-route-studentNumber="@Model.StudentNumber" asp-route-decision="approve">
-                                    ✅
-                                    Approved
-                                </a>
-                                <a class="btn btn-danger" asp-action="Edit" asp-controller="StudentsProfiles"
-                                   asp-route-studentNumber="@Model.StudentNumber" asp-route-decision="reject">
-                                    ❌
-                                    Reject
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <img src="" />
-                    </div> *@
-                    <div class="row">
-                        <div class="col-6">
-                            <div class="form-group">
-                                <label asp-for="StudentName">Student Name</label>
-                                <input type="text" class="form-control" asp-for="StudentName">
-                                <span class="text-danger" asp-validation-for="StudentName"></span>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="form-group">
-                                <label asp-for="StudentNumber">Student Number</label>
-                                <input type="text" class="form-control" asp-for="StudentNumber">
-                                <span class="text-danger" asp-validation-for="StudentNumber"></span>
-                            </div>
-                        </div>
-                    </div>
-                  
-                    <div class="row">
-                        <div class="col-6">
-                            <div class="form-check">
-                                <input asp-for="IsStudentCardBlocked" class="form-check-input" type="checkbox">
-                                <label class="form-check-label" for="IsStudentCardBlocked">
-                                    Is Student Card Blocked
-                                </label>
-                            </div>
-
-                        </div>
-                        <div class="col-6">
-                            <div class="form-check">
-                                <input asp-for="IsActive" class="form-check-input" type="checkbox">
-                                <label class="form-check-label" for="IsActive">
-                                    Registration Enabled ?
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="form-check">
-                                <input asp-for="IsERegistrationComplete" class="form-check-input" type="checkbox">
-                                <label class="form-check-label" for="IsE">
-                                    Registration Completed ?
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="form-group">
-                            <label asp-for="Phone">Student Phone</label>
-                            <input type="text" class="form-control" asp-for="Phone" value="@Model.Phone" maxlength="9" minlength="9">
-                            <span class="text-danger" asp-validation-for="Phone"></span>
-                        </div>
-                    </div>
                     <div class="row">
                         <div class="col-3">
                             <div class="form-group">
@@ -154,10 +74,85 @@
 
                     </div>
 
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label asp-for="StudentName">Student Name</label>
+                                <input type="text" class="form-control" asp-for="StudentName" required>
+                                <span class="text-danger" asp-validation-for="StudentName"></span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label asp-for="StudentNameAr" class="align-content-end">إسم الطالب</label>
+                                <input type="text" class="form-control" dir="rtl" asp-for="StudentNameAr" required>
+                                <span class="text-danger" asp-validation-for="StudentNameAr"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label asp-for="StudentNumber">Student Number</label>
+                                <input type="text" class="form-control" asp-for="StudentNumber" required>
+                                <span class="text-danger" asp-validation-for="StudentNumber"></span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label asp-for="Phone">Student Phone</label>
+                                <input type="text" class="form-control" asp-for="Phone" value="@Model.Phone" maxlength="9" minlength="9">
+                                <span class="text-danger" asp-validation-for="Phone"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-2">
+                            <div class="form-check">
+                                <input asp-for="IsStudentCardBlocked" class="form-check-input" type="checkbox">
+                                <label class="form-check-label" for="IsStudentCardBlocked">
+                                    Is Student Card Blocked
+                                </label>
+                            </div>
+
+                        </div>
+                        <div class="col-2">
+                            <div class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox">
+                                <label class="form-check-label" for="IsActive">
+                                    Registration Enabled ?
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-check">
+                                <input asp-for="IsERegistrationComplete" class="form-check-input" type="checkbox">
+                                <label class="form-check-label" for="IsERegistrationComplete">
+                                    Registration Completed ?
+                                </label>
+                            </div>
+                        </div>
+                        @if (User.HasClaim("Permission", "ManageIsMedicallyFit"))
+                        {
+                            <div class="col-2">
+                                <div class="form-check">
+                                    <input asp-for="IsMedicallyFit" class="form-check-input" type="checkbox">
+                                    <label class="form-check-label" for="IsMedicallyFit">
+                                        Is Medicallyfit?
+                                    </label>
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+                    <div class="row">
+                    </div>
+
                 </div>
                 <div class="card-footer">
                     <button type="submit" class="btn btn-primary  float-right  ml-1">Submit</button>
-                    <a class="btn btn-danger  float-right" asp-controller="PushNotifications"
+                    <a class="btn btn-danger  float-right" asp-controller="StudentsProfiles"
                        asp-action="Index">Cancel</a>
                 </div>
             </div>
@@ -232,7 +227,7 @@
         //         success: function (data) {
         //             console.log(data);
         //             var batchDropdown = $("#batchDropdown");
-        //             batchDropdown.empty(); Clear existing options
+        //             batchDropdown.empty(); // Clear existing options
         //             batchDropdown.append('<option value="">-- Select a Batch --</option>');
 
         //             $.each(data.$values, function (index, value) {
@@ -258,7 +253,7 @@
         //         success: function (data) {
         //             console.log(data);
         //             var programDropdown = $("#programDropdown");
-        //             programDropdown.empty(); // Clear existing options
+        //             programDropdown.empty(); Clear existing options
         //             programDropdown.append('<option value="">-- Select a Program --</option>');
 
         //             $.each(data.$values, function (index, value) {

@@ -35,22 +35,22 @@
         }
 
         <div class="card">
-           
             <div class="card-header">
                 <div class="row justify-content-end">
 
-                        <div class="card-tools">
-                            <div class="btn-group" role="group">
-                                <a class="btn btn-primary " asp-controller="StudentsProfiles" asp-action="Create">
-                                    New Student
-                                </a>
+                    <div class="card-tools">
+                        <div class="btn-group" role="group">
+                            <a class="btn btn-primary " asp-controller="StudentsProfiles" asp-action="Create">
+                                New Student
+                            </a>
 
-                            </div>
                         </div>
+                    </div>
 
-                  
+
                 </div>
-                    <form  asp-action="Index" asp-controller="StudentsProfiles" method="get">
+                <br />
+                <form asp-action="Index" asp-controller="StudentsProfiles" method="get">
 
                     <div class="row">
                         <div class="col-3">
@@ -139,22 +139,15 @@
 
 
                     </div>
-                    <br/>
+                    <br />
                     <div class="row">
-                        <div class="col-12 d-flex">
-                            <input type="text"
-                                   class="form-control me-2"
-                                   placeholder="Student Number, Phone Number, Name"
-                                   name="query"
-                                   value="@Context.Request.Query["query"]"
-                                   aria-label="Search">
-
-                            <button type="submit" class="btn btn-primary me-2 m-1">Submit</button>
-                            <a asp-action="Index" class="btn btn-danger m-1">Clear</a>
+                        <div class="col-12">
+                            <input type="text" class="form-control me-2" placeholder="Student Number, Phone Number, Name " name="query" value="@Context.Request.Query["query"]" aria-label="Search">
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <a asp-action="Index" class="btn btn-danger">Clear</a>
                         </div>
                     </div>
-
-                    </form>
+                </form>
             </div>
             <div class="card-body table-responsive p-0">
                 <table class="table table-head-fixed text-nowrap table-bordered">
@@ -171,63 +164,69 @@
                         </tr>
                     </thead>
                     <tbody>
-                       @if(Model == null || !Model.Any())
-                       {
-                           <tr>
-                               <td colspan="8" class="text-center">No students found.</td>
-                           </tr>
-
-                       }else{
-                         @foreach (Student student in Model)
+                        @if (Model == null || !Model.Any())
                         {
-                                <tr>
-                                <td>@(student.StudentNameA ?? "")</td>
-                                <td>@(student.Phone ?? "")</td>
-                                <td>@(student.StudentNumber ?? "")</td>
-                                <td>@(student.Department.DepartmentNameA ?? "")</td>
-                                <td>@(student.Department.Faculty.FacultyNameA ?? "")</td>
-                                <td>@(student.AddmissionFormNo ?? "")</td>
-                                 <td class="text-center">
-                                        @(student.PersonalPhoto != null ? Html.Raw("<i class='fas fa-check-circle text-success'></i>") : Html.Raw("<i class='fas fa-times-circle text-danger'></i>"))
-                                </td>
-                                <td>
-                                    <a class="btn btn-primary" asp-controller="StudentsProfiles" asp-action="Edit"
-                                        asp-route-studentNumber="@student.StudentNumber">
-                                        <i class="fas fa-pen"></i>&nbsp;
-                                        Edit
-                                    </a>
-                                    <a class="btn btn-danger" asp-controller="StudentsProfiles" asp-action="DeleteAPIUser"
-                                        asp-route-studentNumber="@student.StudentNumber">
-                                        <i class="fas fa-trash"></i>&nbsp;
-                                        Delete User
-                                    </a>
-                                </td>
-
+                            <tr>
+                                <td colspan="8" class="text-center">No students found.</td>
                             </tr>
-                          
+
                         }
-                       }
+                        else
+                        {
+                            @foreach (Student student in Model)
+                            {
+                                <tr>
+                                    <td>@(student.StudentNameA ?? "")</td>
+                                    <td>@(student.Phone ?? "")</td>
+                                    <td>@(student.StudentNumber ?? "")</td>
+                                    <td>@(student.Department?.DepartmentNameA ?? "")</td>
+                                    <td>@(student.Department?.Faculty?.FacultyNameA ?? "")</td>
+                                    <td>@(student.AddmissionFormNo ?? "")</td>
+                                    <td class="text-center">
+                                        @(student.PersonalPhoto != null ? Html.Raw("<i class='fas fa-check-circle text-success'></i>") : Html.Raw("<i class='fas fa-times-circle text-danger'></i>"))
+                                    </td>
+                                    <td>
+                                        <a class="btn btn-primary" asp-controller="StudentsProfiles" asp-action="Edit"
+                                           asp-route-studentNumber="@student.StudentNumber">
+                                            <i class="fas fa-pen"></i>&nbsp;
+                                            Edit
+                                        </a>
+                                        <a class="btn btn-danger" asp-controller="StudentsProfiles" asp-action="DeleteAPIUser"
+                                           asp-route-studentNumber="@student.StudentNumber">
+                                            <i class="fas fa-trash"></i>&nbsp;
+                                            Delete User
+                                        </a>
+                                        <a class="btn btn-secondary" asp-controller="StudentsProfiles"
+                                           asp-action="Edit" asp-route-studentNumber="@student.StudentNumber" asp-route-decision="unblock">
+                                            Unblock SMS
+                                        </a>
+                                    </td>
+
+                                </tr>
+
+                            }
+                        }
                     </tbody>
                 </table>
             </div>
             <div class="card-footer">
                 @Html.PagedListPager(Model, page => Url.Action("Index", new
-                    {
-                        page = page,
-                        facultyNumber = httpContext.Request.Query["facultyNumber"],
-                        departmentNumber = httpContext.Request.Query["departmentNumber"],
-                        batchId = httpContext.Request.Query["batchId"],
-                        programId = httpContext.Request.Query["programId"],
-                        studentNumber = httpContext.Request.Query["studentNumber"]
-
-
-                    }),
-                         new PagedListRenderOptions
                 {
-                    LiElementClasses = new string[] { "page-item" },
-                    PageClasses = new string[] { "page-link" },
-                    UlElementClasses = new string[] { "pagination", "float-right" }
-                })
+                    page = page,
+                                facultyNumber = httpContext.Request.Query["facultyNumber"],
+                                departmentNumber = httpContext.Request.Query["departmentNumber"],
+                                batchId = httpContext.Request.Query["batchId"],
+                                programId = httpContext.Request.Query["programId"],
+                                studentNumber = httpContext.Request.Query["studentNumber"]
+
+
+                                }),
+                                new PagedListRenderOptions
+                                {
+                                    LiElementClasses = new string[] { "page-item" },
+                                    PageClasses = new string[] { "page-link" },
+                                    UlElementClasses = new string[] { "pagination", "float-right" }
+                                })
             </div>
         </div>
     </div>

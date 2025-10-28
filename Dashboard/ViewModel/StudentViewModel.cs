@@ -8,6 +8,7 @@ namespace Dashboard.ViewModel
     {
         public string StudentNumber { get; set; }
         public string StudentName { get; set; }
+        public string StudentNameAr { get; set; }
         public string DepartmentId { get; set; }
         public string Department { get; set; }
         public string FacultyId { get; set; }
@@ -21,6 +22,7 @@ namespace Dashboard.ViewModel
         public string Phone { get; set; }
         public bool IsActive { get; set; }
         public bool IsERegistrationComplete { get; set; }
+        public bool IsMedicallyFit { get; set; }
     }
     public class EditStudentViewModel : StudentViewModel
     {

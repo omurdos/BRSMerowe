@@ -1,12 +1,13 @@
 ﻿using AutoMapper;
 using Core.Entities;
+using Core.Migrations;
 using Core.Models;
 using Dashboard.ViewModel;
-using Emgu.CV.Ocl;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Shared.Services;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
@@ -26,9 +27,8 @@ namespace Dashboard.Controllers
         private readonly ImageUploadService _imageUploadService;
         private readonly ImageProcessingService _imageProcessingService;
         private readonly FacultyClaimsService _facultyClaimsService;
-
-        private readonly UserManager<APIUser> _userManager;
         private readonly IWebHostEnvironment _env;
+        private readonly UserManager<APIUser> _userManager;
         // List<string> facultyNumbers = new List<string>();
         // List<Claim> facultiesClaims = new List<Claim>();
 
@@ -46,7 +46,7 @@ namespace Dashboard.Controllers
             _imageProcessingService = imageProcessingService;
             _userManager = userManager;
             _facultyClaimsService = facultyClaimsService;
-            _env = env; 
+            _env=env;
         }
 
 
@@ -54,68 +54,75 @@ namespace Dashboard.Controllers
         {
             try
             {
-                List<Core.Entities.Student> students = [];
-
+                const int pageSize = 10;
+                int pageNumber = page ?? 1;
 
                 _facultyClaimsService.LoadFaculties(this.User);
 
+                IQueryable<Core.Entities.Student> queryable = _dbContext.Students
+                    .Include(s => s.Department)
+                    .ThenInclude(d => d.Faculty)
+                    .Where(s => s.IsActive && _facultyClaimsService.facultyNumbers.Contains(s.FacultyNumber));
 
-
-
-                //For single student
-                if (query != null && facultyNumber == null || facultyNumber == "")
+                // Filter for single student search
+                if (!string.IsNullOrWhiteSpace(query) && string.IsNullOrWhiteSpace(facultyNumber))
                 {
-
-
-
-                    // if (_facultyClaimsService.facultyNumbers.Contains(facultyNumber))
-                    // {
-
-                    students = await _dbContext.Students.Include(s => s.Department).ThenInclude(d => d.Faculty)
-                                          .Where(s =>
-                                          (s.StudentNameA.Contains(query) || s.StudentNameE.Contains(query) || s.StudentNumber.Contains(query) || s.Phone.Contains(query)) && s.IsActive == true && _facultyClaimsService.facultyNumbers.Contains(s.FacultyNumber))
-                                          .ToListAsync();
-                    await LoadLookups(facultyNumber, departmentNumber, batchId, programId);
-
-                    // }
-
-
-
-                    TempData["Title"] = "Students Profiles";
-                    return View(students.ToPagedList(page ?? 1, 10));
-
+                    queryable = queryable.Where(s =>
+                        s.StudentNameA.Contains(query) ||
+                        s.StudentNameE.Contains(query) ||
+                        s.StudentNumber.Contains(query) ||
+                        s.Phone.Contains(query) ||
+                        s.AddmissionFormNo.Contains(query)
+                    );
                 }
+                else
+                {
+                    // Filter for multi-student based on form selections
+                    if (!string.IsNullOrWhiteSpace(facultyNumber))
+                        queryable = queryable.Where(s => s.FacultyNumber == facultyNumber);
 
+                    if (!string.IsNullOrWhiteSpace(departmentNumber))
+                        queryable = queryable.Where(s => s.DepartmentNumber == departmentNumber);
 
-                //For All Students
+                    if (!string.IsNullOrWhiteSpace(studentNumber))
+                        queryable = queryable.Where(s => s.StudentNumber == studentNumber);
 
-                students = await _dbContext.Students.Include(s => s.Department).ThenInclude(d => d.Faculty)
-             .Where(s => s.IsActive == true &&
+                    if (batchId.HasValue && batchId != 0)
+                        queryable = queryable.Where(s => s.BatchId == batchId);
 
-               (batchId == null || batchId == 0 || s.BatchId == batchId) &&
-                  (facultyNumber == null || facultyNumber == "" || s.FacultyNumber == facultyNumber) &&
-                  _facultyClaimsService.facultyNumbers.Contains(s.FacultyNumber) &&
-                  (programId == null || programId == 0 || s.ProgramId == programId) &&
-                  (departmentNumber == null || departmentNumber == "" || s.DepartmentNumber == departmentNumber) &&
-                  (studentNumber == null || studentNumber == "" || s.StudentNumber == studentNumber)
-
-
-             )
-    .OrderBy(s => s.StudentId) // 👈 Add this
-
-             .ToListAsync();
+                    if (programId.HasValue && programId != 0)
+                        queryable = queryable.Where(s => s.ProgramId == programId);
+                }
 
                 await LoadLookups(facultyNumber, departmentNumber, batchId, programId);
 
+                var studentsPaged = await queryable
+                    .OrderBy(s => s.StudentNumber)
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+
+                //foreach (var student in studentsPaged)
+                //{
+                //   Console.WriteLine(student.Department.DepartmentNameA);
+                //   Console.WriteLine(student.Department.Faculty.FacultyNameA);
+                //}
+
+
+
                 TempData["Title"] = "Students Profiles";
-                Console.Write(students);
-                var pagedStudents = students.ToPagedList(page ?? 1, 10);
-                return View(pagedStudents);
+
+                // For PagedList core (without fetching all rows for total count)
+                var totalStudentsCount = await queryable.CountAsync();
+                var pagedList = new StaticPagedList<Core.Entities.Student>(studentsPaged, pageNumber, pageSize, totalStudentsCount);
+
+                return View(pagedList);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while fetching students profiles: {Message}", ex.Message);
-                throw ex;
+                throw;
             }
 
         }
@@ -138,6 +145,7 @@ namespace Dashboard.Controllers
             }
         }
 
+
         [HttpGet]
         public async Task<IActionResult> Create()
         {
@@ -145,7 +153,10 @@ namespace Dashboard.Controllers
             {
                 //_facultyClaimsService.LoadFaculties(this.User);
                 await LoadLookups(null, null, null, null);
-                return View(new StudentViewModel());
+                return View(new StudentViewModel()
+                {
+                    IsActive = true
+                });
             }
             catch (Exception ex)
             {
@@ -166,24 +177,26 @@ namespace Dashboard.Controllers
                     .ThenInclude(d => d.Faculty)
                     .Include(s => s.Batch)
                     .FirstOrDefault(s => s.StudentNumber == viewModel.StudentNumber);
-                if (student != null) {
+                if (student != null)
+                {
                     TempData["ErrorMessage"] = "Student with the provided student number or phone number already exists";
                     return View(viewModel);
                 }
 
-                student = new Core.Entities.Student { 
-                
-                    StudentNumber = viewModel.StudentNumber,
-                    StudentNameA = viewModel.StudentName,
-                    DepartmentNumber = viewModel.DepartmentId,
-                    FacultyNumber = viewModel.FacultyId,
+                student = new Core.Entities.Student
+                {
+
+                    StudentNumber = viewModel.StudentNumber.Trim(),
+                    StudentNameA = viewModel.StudentName.Trim(),
+                    DepartmentNumber = viewModel.DepartmentId.Trim(),
+                    FacultyNumber = viewModel.FacultyId.Trim(),
                     BatchId = viewModel.BatchId,
                     ProgramId = viewModel.ProgramId,
                     PersonalPhoto = viewModel.PersonalPhoto,
                     IsStudentCardBlocked = viewModel.IsStudentCardBlocked,
                     IsMedicallyFit = true, // Default to true, can be changed later
-                    Phone = viewModel.Phone,
-                    IsActive = viewModel.IsActive, // Default to true, can be changed later
+                    Phone = viewModel.Phone == null ? null : viewModel.Phone.Trim(),
+                    IsActive = true, // Default to true, can be changed later
                     IsERegistrationComplete = viewModel.IsERegistrationComplete // Default to false, can be changed later
 
                 };
@@ -192,7 +205,7 @@ namespace Dashboard.Controllers
                 if (result > 0)
                 {
                     TempData["SuccessMessage"] = "Student profile created successfully";
-                   return RedirectToAction("Index", "StudentsProfiles");
+                    return RedirectToAction("Index", "StudentsProfiles");
                 }
 
 
@@ -204,7 +217,6 @@ namespace Dashboard.Controllers
                 throw;
             }
         }
-
 
 
 
@@ -224,16 +236,30 @@ namespace Dashboard.Controllers
                 if (student == null)
                 {
                     TempData["Title"] = "Students Profiles";
-                    TempData["ErrorMessage"] = "Student not found";
+                    TempData["Message"] = "Student not found";
                     return RedirectToAction("Index", "StudentsProfiles");
 
                 }
+
+
 
                 if (!_facultyClaimsService.facultyNumbers.Contains(student.FacultyNumber))
                 {
 
                     return RedirectToAction("Index", "StudentsProfiles");
                 }
+
+                var studentUser = await _userManager.Users.Include(u => u.Student).Where(u => u.Student.StudentNumber == student.StudentNumber).FirstOrDefaultAsync();
+                if (studentUser != null)
+                {
+                    var lastOTP = await _dbContext.OTPCodes
+                    .Where(o => o.PhoneNumber == studentUser.PhoneNumber && !o.Code.Contains("رسوم"))
+                    .OrderByDescending(o => o.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                    ViewBag.lastOTP = lastOTP;
+                }
+
 
 
                 if (decision == "approve")
@@ -261,7 +287,7 @@ namespace Dashboard.Controllers
                     _logger.LogInformation("Notification sent to user {UserId} with result: {Result}", user.Id, notificationSendResult.SuccessCount);
 
                     TempData["Title"] = "Students Profiles";
-                    TempData["SuccessMessage"] = "Profile picture approved successfully";
+                    TempData["Message"] = "Profile picture approved successfully";
                     return View(editStudentViewModel);
 
                 }
@@ -291,11 +317,53 @@ namespace Dashboard.Controllers
                     _logger.LogInformation("Notification sent to user {UserId} with result: {Result}", user.Id, notificationSendResult.SuccessCount);
 
                     TempData["Title"] = "Students Profiles";
-                    TempData["SuccessMessage"] = "Profile picture rejected successfully";
+                    TempData["Message"] = "Profile picture rejected successfully";
                     return View(editStudentViewModel);
 
                 }
-                await LoadLookups(student.FacultyNumber, student.DepartmentNumber, null, null);
+
+
+                if (decision == "unblock")
+                {
+
+
+                    //get sms access
+                    var smsAccess = await _dbContext.SMSAccesses.Where(sa => sa.PhoneNumber == student.Phone).FirstOrDefaultAsync();
+                    int unblockResult = 0;
+                    if (smsAccess != null)
+                    {
+
+                        smsAccess.IsBlocked = false;
+                        smsAccess.BlockCounts = 0;
+                        smsAccess.SendCount = 0;
+                        smsAccess.ModifiedAt = DateTime.UtcNow;
+                        smsAccess.LockedAt = DateTime.MinValue;
+
+                        _dbContext.SMSAccesses.Update(smsAccess);
+                        unblockResult = await _dbContext.SaveChangesAsync();
+                        if (unblockResult > 0)
+                        {
+                            TempData["Title"] = "Students Profiles";
+                            TempData["SuccessMessage"] = "SMS Access unblock successfully";
+
+                        }
+                        else
+                        {
+                            TempData["Title"] = "Students Profiles";
+                            TempData["FailMessage"] = "Failed to unblock SMS Access";
+                        }
+
+
+
+
+                        return RedirectToAction("Edit", new { studentNumber = student.StudentNumber });
+
+
+                    }
+                }
+
+
+                await LoadLookups(student.FacultyNumber, student.DepartmentNumber, student.BatchId, student.ProgramId);
 
                 if (student != null)
                 {
@@ -310,16 +378,13 @@ namespace Dashboard.Controllers
                         Faculty = student.Department.Faculty.FacultyNameA,
                         BatchId = student.BatchId,
                         Batch = student.Batch.BatchDescription,
+                        ProgramId = student.ProgramId ?? 0,
                         PersonalPhoto = student.PersonalPhoto,
                         Phone = student.Phone,
                         IsStudentCardBlocked = student.IsStudentCardBlocked,
+                        IsMedicallyFit = student.IsMedicallyFit ?? false,
                         IsActive = student.IsActive,
                     };
-
-                    //await LoadLookups(null, null, null, null);
-
-
-
 
 
 
@@ -345,19 +410,19 @@ namespace Dashboard.Controllers
             {
                 _facultyClaimsService.LoadFaculties(this.User);
 
-
+                var student = await _dbContext.Students.Include(s => s.Department)
+                      .ThenInclude(d => d.Faculty)
+                      .Include(s => s.Batch)
+                      .FirstOrDefaultAsync(s => s.StudentNumber == editStudentViewModel.StudentNumber);
                 if (ModelState.IsValid)
                 {
-                    var student = await _dbContext.Students.Include(s => s.Department)
-                        .ThenInclude(d => d.Faculty)
-                        .Include(s => s.Batch)
-                        .FirstOrDefaultAsync(s => s.StudentNumber == editStudentViewModel.StudentNumber);
+
 
 
                     if (student == null)
                     {
                         TempData["Title"] = "Students Profiles";
-                        TempData["ErrorMessage"] = "Student not found";
+                        TempData["Message"] = "Student not found";
                         return RedirectToAction("Index", "StudentsProfiles");
 
                     }
@@ -381,7 +446,7 @@ namespace Dashboard.Controllers
                             if (!_imageProcessingService.IsValidImage(uploadedImage))
                             {
                                 TempData["Title"] = "Students Profiles";
-                                TempData["ErrorMessage"] = "Invalid image";
+                                TempData["Message"] = "Invalid image";
 
                                 return View(editStudentViewModel);
 
@@ -399,7 +464,7 @@ namespace Dashboard.Controllers
                             else if (!fileUploadResult.Succeed)
                             {
                                 TempData["Title"] = "Students Profiles";
-                                TempData["SuccessMessage"] = fileUploadResult.Message;
+                                TempData["Message"] = fileUploadResult.Message;
 
                                 return View(editStudentViewModel);
                             }
@@ -411,7 +476,10 @@ namespace Dashboard.Controllers
                         student.DepartmentNumber = editStudentViewModel.DepartmentId;
                         student.BatchId = editStudentViewModel.BatchId;
                         student.IsActive = editStudentViewModel.IsActive;
-                        if (editStudentViewModel.Phone != null) {
+                        student.IsMedicallyFit = editStudentViewModel.IsMedicallyFit;
+                        student.ProgramId = editStudentViewModel.ProgramId == 0 ? null : editStudentViewModel.ProgramId;
+                        if (editStudentViewModel.Phone != null)
+                        {
                             if (!editStudentViewModel.Phone.Equals(student.Phone))
                             {
                                 student.Phone = editStudentViewModel.Phone;
@@ -425,27 +493,32 @@ namespace Dashboard.Controllers
                                 }
                             }
                         }
-                        
+
                         _dbContext.Students.Update(student);
                         await _dbContext.SaveChangesAsync();
                         TempData["Title"] = "Students Profiles";
-                        return RedirectToAction("Index", "StudentsProfiles");
+                        TempData["SuccessMessage"] = $"Student {student.StudentNameA} details has been updated successfully";
+                        return RedirectToAction("Edit", new { studentNumber = student.StudentNumber });
 
                     }
 
                     return View(editStudentViewModel);
                 }
-                TempData["Title"] = "Students Profiles";
-                TempData["ErrorMessage"] = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                await LoadLookups(null, null, null, null);
 
-                return View(editStudentViewModel);
+                TempData["Title"] = "Students Profiles";
+                TempData["Message"] = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+
+                return RedirectToAction("Edit", new { studentNumber = student.StudentNumber });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while editing student profile: {Message}", ex.Message);
-                throw ex;
+                throw;
             }
         }
+
+
 
 
         [HttpGet]
@@ -461,7 +534,7 @@ namespace Dashboard.Controllers
                 if (user == null)
                 {
                     TempData["Title"] = "Students Profiles";
-                    TempData["ErrorMessage"] = "Student not found";
+                    TempData["Message"] = "Student not found";
                     return RedirectToAction("Index", "StudentsProfiles");
 
                 }
@@ -478,7 +551,7 @@ namespace Dashboard.Controllers
                 if (user == null)
                 {
                     TempData["Title"] = "Students Profiles";
-                    TempData["ErrorMessage"] = "User does not exist";
+                    TempData["Message"] = "User does not exist";
                     return RedirectToAction("Index", "StudentsProfiles");
                 }
                 var userDevices = await _dbContext.Devices.Where(d => d.APIUser.Id == user.Id).ToListAsync();
@@ -496,7 +569,7 @@ namespace Dashboard.Controllers
                 await _userManager.DeleteAsync(userAccountToDelete);
 
                 TempData["Title"] = "Students Profiles";
-                TempData["SuccessMessage"] = "User deleted successfully";
+                TempData["Message"] = "User deleted successfully";
                 return RedirectToAction("Index", "StudentsProfiles");
 
             }
@@ -507,7 +580,7 @@ namespace Dashboard.Controllers
             }
         }
 
-        private async Task LoadLookups(string facultyNumber, string departmentNumber, int? batchId, int? programId)
+        private async Task LoadLookups(string facultyNumber, string departmentNumber, decimal? batchId, decimal? programId)
         {
             _facultyClaimsService.LoadFaculties(this.User);
 
@@ -522,7 +595,8 @@ namespace Dashboard.Controllers
                 batches = await _dbContext.Batches.ToListAsync();
                 programs = await _dbContext.Programs.ToListAsync();
             }
-            else {
+            else
+            {
                 batches = await _dbContext.Students
                .Where(s => s.FacultyNumber == facultyNumber && s.DepartmentNumber == departmentNumber)
                .Join(_dbContext.Batches,
@@ -551,13 +625,13 @@ namespace Dashboard.Controllers
         .ToListAsync();
             }
 
-           
 
 
-          
 
-            //var batches = await _dbContext.Batches.Where(b => batchId == null || batchId == 0 ? b. != batchId : b.BatchId == batchId).ToListAsync();
-            //var programs = await _dbContext.Programs.Where(p => programId == null || programId == 0 ? p.ProgramId != programId : p.ProgramId == programId).ToListAsync();
+
+
+            // batches = (batches.IsNullOrEmpty() || batches == null) ? await _dbContext.Batches.Where(b => batchId == null || batchId == 0 ? b.BatchId != batchId : b.BatchId == batchId).ToListAsync() : [];
+            //programs = (programs.IsNullOrEmpty() || programs == null) ? await _dbContext.Programs.Where(p => programId == null || programId == 0 ? p.ProgramId != programId : p.ProgramId == programId).ToListAsync() : [];
 
             ViewBag.Faculties = faculties;
             ViewBag.Departments = departments;
@@ -565,6 +639,7 @@ namespace Dashboard.Controllers
             ViewBag.Programs = programs;
 
         }
+
 
     }
 }
