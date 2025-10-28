@@ -1,4 +1,5 @@
 ﻿
+using API.BackgroundServices;
 using API.HttpServices;
 using BRSSinnar.Dashboard.Helpers;
 using Core.Entities;
@@ -46,6 +47,8 @@ builder.Services.AddSwaggerGen(options =>
     })
 
     );
+builder.Services.AddHostedService<UserCleanupService>();
+
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddTransient<IJWTService, JWTService>();
 builder.Services.AddTransient<ImageValidationService, ImageValidationService>();
