@@ -13,7 +13,7 @@ using Shared.Services;
 
 namespace API.Controllers
 {
-   // [Authorize]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class StudentsController : ControllerBase
