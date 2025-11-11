@@ -2,6 +2,7 @@
 using AutoMapper;
 using Core.Entities;
 using Core.Migrations;
+using HttpServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +13,7 @@ using Shared.Services;
 
 namespace API.Controllers
 {
-    [Authorize]
+   // [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class StudentsController : ControllerBase
@@ -24,8 +25,11 @@ namespace API.Controllers
         private readonly UserManager<APIUser> _userManager;
         private readonly ILogger<StudentsController> _logger;
         private readonly FacultyClaimsService _facultyClaimsService;
+        private readonly StudentDetailsService _studentDetailsService;
 
-        public StudentsController(TSTDBContext context, IMapper mapper, SMSService sMSService, UserManager<APIUser> userManager, ILogger<StudentsController> logger, FacultyClaimsService facultyClaimsService)
+
+        public StudentsController(TSTDBContext context, IMapper mapper, SMSService sMSService, UserManager<APIUser> userManager, ILogger<StudentsController> logger, 
+            FacultyClaimsService facultyClaimsService, StudentDetailsService studentDetailsService)
         {
             _context= context;
             _mapper= mapper;
@@ -33,6 +37,7 @@ namespace API.Controllers
             _userManager= userManager;
             _logger = logger;
             _facultyClaimsService = facultyClaimsService;
+            _studentDetailsService = studentDetailsService;
 
         }
 
@@ -216,9 +221,24 @@ namespace API.Controllers
                 var student = await _context.Students
                     .FirstOrDefaultAsync(u => u.StudentNumber == studentNumber);
 
+             
+
+
+
+
                 if (student != null)
                 {
-                    return Ok(new { student.IsOwed });
+                    var studentPayments = await _studentDetailsService.GetStudentDetailsFromApi(studentNumber);
+                    if (studentPayments == null) {
+                        return BadRequest("Unable to retrieve student payment details from external API.");
+                    }
+                    if (studentPayments.Any()) {
+                        return Ok(new { IsOwed = true });
+
+                    }
+                    else {
+                        return Ok(new { IsOwed = false });
+                    }
                 }
 
                 else {
