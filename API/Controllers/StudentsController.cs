@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Shared.Services;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -233,6 +234,13 @@ namespace API.Controllers
                         return BadRequest("Unable to retrieve student payment details from external API.");
                     }
                     if (studentPayments.Any()) {
+
+                        var pendingPayments = studentPayments.Where(sp => sp.IsPaid == 0).ToList();
+
+                        if (pendingPayments.IsNullOrEmpty()) {
+                            return Ok(new { IsOwed = false });
+                        }
+
                         return Ok(new { IsOwed = true });
 
                     }
