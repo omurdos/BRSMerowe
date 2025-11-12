@@ -3,7 +3,6 @@ using API.BackgroundServices;
 using API.HttpServices;
 using BRSSinnar.Dashboard.Helpers;
 using Core.Entities;
-using HttpServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

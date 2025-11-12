@@ -7,6 +7,7 @@
     var batches = ViewBag.batches as List<Batch>;
     var programs = ViewBag.programs as List<Program>;
     var otpCodes = ViewBag.lastOTP as OTPCode;
+    var studentPayments = ViewBag.StudentPayments as ApiData;
 
 }
 
@@ -240,6 +241,49 @@
         </form>
     </div>
 </div>
+
+
+@if(studentPayments != null)
+{
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5>Student Payment Details</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Payment Reference</th>
+                        <th>Amount</th>
+                        <th>Semester</th>
+                        <th>Is Paid</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var registrationPayments in studentPayments.registrations)
+                    {
+                        <tr>
+                            <td>@(registrationPayments?.PaymentReference ?? "")</td>
+                            <td>@(registrationPayments?.PaymentAmount ?? "")</td>
+                            <td>@(registrationPayments?.SemesterId ?? 0)</td>
+                            <td class="text-center">
+                                        @(registrationPayments.IsPaid == 1 ? Html.Raw("<i class='fas fa-check-circle text-success'></i>") : Html.Raw("<i class='fas fa-times-circle text-danger'></i>"))
+                                    </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-info text-center mt-3">
+        No payment details found.
+    </div>
+
+}
+
 
 <!--OTP Codes Table-->
 @if (otpCodes != null)

@@ -29,14 +29,16 @@ namespace Dashboard.Controllers
         private readonly FacultyClaimsService _facultyClaimsService;
         private readonly IWebHostEnvironment _env;
         private readonly UserManager<APIUser> _userManager;
+        public readonly StudentDetailsService _studentDetailsService;
         // List<string> facultyNumbers = new List<string>();
         // List<Claim> facultiesClaims = new List<Claim>();
 
 
         public StudentsProfilesController(ILogger<PushNotificationsController> logger,
 
-        TSTDBContext dbContext, IMapper mapper, FirebaseService pushNotificationService, ImageUploadService imageUploadService, ImageProcessingService imageProcessingService, UserManager<APIUser> userManager,
-        FacultyClaimsService facultyClaimsService, IWebHostEnvironment env)
+        TSTDBContext dbContext, IMapper mapper, FirebaseService pushNotificationService,
+        ImageUploadService imageUploadService, ImageProcessingService imageProcessingService, UserManager<APIUser> userManager,
+        FacultyClaimsService facultyClaimsService, IWebHostEnvironment env, StudentDetailsService studentDetailsService)
         {
             _logger = logger;
             _dbContext = dbContext;
@@ -46,7 +48,8 @@ namespace Dashboard.Controllers
             _imageProcessingService = imageProcessingService;
             _userManager = userManager;
             _facultyClaimsService = facultyClaimsService;
-            _env=env;
+            _env = env;
+            _studentDetailsService = studentDetailsService;
         }
 
 
@@ -387,8 +390,8 @@ namespace Dashboard.Controllers
                     };
 
 
-
-
+                    var studdentPayments = await _studentDetailsService.GetAll(student.StudentNumber);
+                    ViewBag.StudentPayments = studdentPayments;
                     TempData["Title"] = "Students Profiles";
                     return View(editStudentViewModel);
                 }

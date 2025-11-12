@@ -2,7 +2,6 @@
 using AutoMapper;
 using Core.Entities;
 using Core.Migrations;
-using HttpServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

@@ -33,6 +33,7 @@ builder.Services.AddTransient<SMSService, SMSService>();
 builder.Services.AddTransient<ImageUploadService, ImageUploadService>();
 builder.Services.AddTransient<ImageProcessingService, ImageProcessingService>();
 builder.Services.AddTransient<FacultyClaimsService, FacultyClaimsService>();
+builder.Services.AddTransient<StudentDetailsService, StudentDetailsService>();
 
 builder.Services.AddTransient(provider =>
 {

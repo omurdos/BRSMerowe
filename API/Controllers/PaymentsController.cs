@@ -2,7 +2,6 @@
 using Core.Entities;
 using Core.Enums;
 using FirebaseAdmin.Messaging;
-using HttpServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
