@@ -29,7 +29,7 @@ namespace Shared.Services
         //     });
         // }
 
-        public async Task<List<StudentPaymentDTO>> GetStudentDetailsFromApi(string studentId, string bankToken = "TokenForNileBank77")
+        public async Task<List<StudentPaymentDTO>> GetStudentDetailsFromApi(string studentId, string bankToken = "u-financial-5@7#3")
         {
             try {
                 var client = new HttpClient();
@@ -63,7 +63,7 @@ namespace Shared.Services
         }
 
 
-        public async Task<ApiData> GetAll(string studentId, string bankToken = "TokenForNileBank77")
+        public async Task<ApiData> GetAll(string studentId, string bankToken = "u-financial-5@7#3")
         {
             try {
                 var client = new HttpClient();
@@ -96,7 +96,7 @@ namespace Shared.Services
             }
         }
 
-        public async Task<List<StudentInvoiceDTO>> GetStudentInvoices(string studentId, string bankToken = "TokenForNileBank77")
+        public async Task<List<StudentInvoiceDTO>> GetStudentInvoices(string studentId, string bankToken = "u-financial-5@7#3")
         {
             try
             {
