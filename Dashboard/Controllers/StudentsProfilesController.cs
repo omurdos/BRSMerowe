@@ -252,16 +252,13 @@ namespace Dashboard.Controllers
                     return RedirectToAction("Index", "StudentsProfiles");
                 }
 
-                var studentUser = await _userManager.Users.Include(u => u.Student).Where(u => u.Student.StudentNumber == student.StudentNumber).FirstOrDefaultAsync();
-                if (studentUser != null)
-                {
-                    var lastOTP = await _dbContext.OTPCodes
-                    .Where(o => o.PhoneNumber == studentUser.PhoneNumber && !o.Code.Contains("رسوم"))
-                    .OrderByDescending(o => o.CreatedAt)
-                    .FirstOrDefaultAsync();
+                var lastOTP = await _dbContext.OTPCodes
+                .Where(o => o.PhoneNumber == student.Phone && !o.Code.Contains("رسوم"))
+                .OrderByDescending(o => o.CreatedAt)
+                .FirstOrDefaultAsync();
 
-                    ViewBag.lastOTP = lastOTP;
-                }
+                ViewBag.lastOTP = lastOTP;
+
 
 
 
