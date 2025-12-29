@@ -488,6 +488,16 @@ namespace Dashboard.Controllers
 
                         }
 
+                        if (editStudentViewModel.StudentNameAr == null || editStudentViewModel.StudentName == null)
+                        {
+                               TempData["Title"] = "Students Profiles";
+                                TempData["Message"] = "Student name in both languages are required";
+                            return View(editStudentViewModel);
+                        }
+
+                        student.StudentNameA = editStudentViewModel.StudentNameAr.Trim();
+                        student.StudentNameE = editStudentViewModel.StudentName.Trim();
+                        student.StudentNumber = editStudentViewModel.StudentNumber;
                         student.IsStudentCardBlocked = editStudentViewModel.IsStudentCardBlocked;
                         student.FacultyNumber = editStudentViewModel.FacultyId;
                         student.DepartmentNumber = editStudentViewModel.DepartmentId;
