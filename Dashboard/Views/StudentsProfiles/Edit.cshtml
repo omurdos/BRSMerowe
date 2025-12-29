@@ -54,6 +54,22 @@
                     <div class="row">
                         <div class="col-6">
                             <div class="form-group">
+                                <label asp-for="StudentName">Student Name(En)</label>
+                                <input type="text" class="form-control" asp-for="StudentName">
+                                <span class="text-danger" asp-validation-for="StudentName"></span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label asp-for="StudentNameAr">Student Name(Ar)</label>
+                                <input type="text" class="form-control" asp-for="StudentNameAr">
+                                <span class="text-danger" asp-validation-for="StudentNameAr"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
                                 <label asp-for="StudentName">Student Name</label>
                                 <input type="text" class="form-control" asp-for="StudentName" disabled>
                                 <span class="text-danger" asp-validation-for="StudentName"></span>

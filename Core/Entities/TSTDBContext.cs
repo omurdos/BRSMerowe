@@ -80,10 +80,10 @@ namespace Core.Entities
             {
                 //AWS
                 //optionsBuilder.UseSqlServer("Server=database-1.cjwi4xe9w5ck.us-east-2.rds.amazonaws.com;Initial Catalog=SinnarRSDB;User Id=admin;Password=ByxB1(_^3Jn2=.Pf:XY_34$&YO");
-                optionsBuilder.UseSqlServer("Server=62.164.219.146;Initial Catalog=MeroweDB;User Id=sa;Password=Passme@123;TrustServerCertificate=True;");
+                //optionsBuilder.UseSqlServer("Server=62.164.219.146;Initial Catalog=MeroweDB;User Id=sa;Password=Passme@123;TrustServerCertificate=True;");
                 
                 //Local DB
-                //optionsBuilder.UseSqlServer("Server=.\\SQLExpress;Initial Catalog=BRS;User Id=sa;Password=Passme@123;TrustServerCertificate=True;");
+                optionsBuilder.UseSqlServer("Server=.\\SQLExpress;Initial Catalog=BRS;User Id=sa;Password=Passme@123;TrustServerCertificate=True;");
                 
                 
                 

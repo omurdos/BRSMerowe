@@ -268,15 +268,23 @@ namespace Dashboard.Controllers
                     student.CanEditPersonalPhoto = false;
                     _dbContext.Students.Update(student);
                     await _dbContext.SaveChangesAsync();
-                    var editStudentViewModel = new EditStudentViewModel
+                      var editStudentViewModel = new EditStudentViewModel
                     {
                         StudentNumber = student.StudentNumber,
-                        StudentName = student.StudentNameA,
+                        StudentName = student.StudentNameE,
+                        StudentNameAr = student.StudentNameA,
                         Department = student.Department.DepartmentNameA,
+                        DepartmentId = student.Department.DepartmentNumber,
+                        FacultyId = student.Department.Faculty.FacultyNumber,
                         Faculty = student.Department.Faculty.FacultyNameA,
+                        BatchId = student.BatchId,
+                        Batch = student.Batch.BatchDescription,
+                        ProgramId = student.ProgramId ?? 0,
                         PersonalPhoto = student.PersonalPhoto,
+                        Phone = student.Phone,
                         IsStudentCardBlocked = student.IsStudentCardBlocked,
-                        Phone = student.Phone
+                        IsMedicallyFit = student.IsMedicallyFit ?? false,
+                        IsActive = student.IsActive,
                     };
 
                     var user = await _userManager.Users.Include(u => u.Student).Include(u => u.Devices).FirstOrDefaultAsync(u => u.Student.StudentNumber == student.StudentNumber);
@@ -299,15 +307,23 @@ namespace Dashboard.Controllers
                     student.CanEditPersonalPhoto = true;
                     _dbContext.Students.Update(student);
                     await _dbContext.SaveChangesAsync();
-                    var editStudentViewModel = new EditStudentViewModel
+                      var editStudentViewModel = new EditStudentViewModel
                     {
                         StudentNumber = student.StudentNumber,
-                        StudentName = student.StudentNameA,
+                        StudentName = student.StudentNameE,
+                        StudentNameAr = student.StudentNameA,
                         Department = student.Department.DepartmentNameA,
+                        DepartmentId = student.Department.DepartmentNumber,
+                        FacultyId = student.Department.Faculty.FacultyNumber,
                         Faculty = student.Department.Faculty.FacultyNameA,
+                        BatchId = student.BatchId,
+                        Batch = student.Batch.BatchDescription,
+                        ProgramId = student.ProgramId ?? 0,
                         PersonalPhoto = student.PersonalPhoto,
+                        Phone = student.Phone,
                         IsStudentCardBlocked = student.IsStudentCardBlocked,
-                        Phone = student.Phone
+                        IsMedicallyFit = student.IsMedicallyFit ?? false,
+                        IsActive = student.IsActive,
                     };
                     var user = await _userManager.Users.Include(u => u.Student).Include(u => u.Devices).FirstOrDefaultAsync(u => u.Student.StudentNumber == student.StudentNumber);
 
@@ -371,7 +387,8 @@ namespace Dashboard.Controllers
                     var editStudentViewModel = new EditStudentViewModel
                     {
                         StudentNumber = student.StudentNumber,
-                        StudentName = student.StudentNameA,
+                        StudentName = student.StudentNameE,
+                        StudentNameAr = student.StudentNameA,
                         Department = student.Department.DepartmentNameA,
                         DepartmentId = student.Department.DepartmentNumber,
                         FacultyId = student.Department.Faculty.FacultyNumber,
